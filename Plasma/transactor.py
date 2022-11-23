@@ -5,10 +5,12 @@ from enum import Enum
 from BFBC2_MasterServer.packet import HEADER_LENGTH, Packet
 
 from Plasma.error import Error, TransactionError, TransactionSkip
+from Plasma.services.connect import TXN as ConnectTXN
+from Plasma.services.connect import ConnectService
 
 
 class TransactionService(Enum):
-    pass
+    ConnectService = "fsys"
 
 
 class TransactionKind(Enum):
@@ -24,12 +26,13 @@ class Transactor:
     tid = 0  # Transaction ID
 
     services = {}
-    allowed_uncheduled_transactions = []
+    allowed_uncheduled_transactions = [ConnectTXN.MemCheck.value, ConnectTXN.Ping.value]
 
     def __init__(self, connection):
         self.connection = connection
 
         # Init services
+        self.services[TransactionService.ConnectService] = ConnectService(connection)
 
     async def start(self, service: TransactionService, txn, data):
         """Start a unscheduled transaction"""
