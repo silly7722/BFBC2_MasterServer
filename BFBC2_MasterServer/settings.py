@@ -10,6 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+import mimetypes
+import os
+import random
+import string
+from distutils.util import strtobool
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,23 +25,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-t@l1!pjvt+fb!%ptl+#k$%@@#=uciivm11s*#cthon%j!5krmf"
+SECRET_KEY = os.getenv(
+    "SECRET_KEY", "".join(random.choice(string.printable) for _ in range(50))
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = strtobool(os.getenv("DEBUG", "False"))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -47,6 +56,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
 ROOT_URLCONF = "BFBC2_MasterServer.urls"
@@ -68,16 +78,50 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "BFBC2_MasterServer.wsgi.application"
-
+ASGI_APPLICATION = "BFBC2_MasterServer.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("POSTGRES_NAME"),
+        "USER": os.environ.get("POSTGRES_USER"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
+        "HOST": "database",
+        "PORT": 5432,
     }
+}
+
+# Sessions
+# https://docs.djangoproject.com/en/4.1/ref/settings/#sessions
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
+
+# Cache
+# https://docs.djangoproject.com/en/4.1/ref/settings/#cache
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis:6379",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+
+# Channel layers
+# https://channels.readthedocs.io/en/latest/topics/channel_layers.html
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
 }
 
 
@@ -121,3 +165,52 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Add text/plain as a known mimetype for files with no extension
+mimetypes.add_type("text/plain", "", True)
+
+# Logging
+# https://docs.djangoproject.com/en/4.1/ref/settings/#logging
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "default": {
+            "format": "[{asctime}][{levelname}]: {message}",
+            "style": "{",
+        },
+        "consumer": {
+            "format": "[{asctime}][{levelname}][{path}][{address}]: {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "default",
+        },
+        "console_consumer": {
+            "class": "logging.StreamHandler",
+            "formatter": "consumer",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "DEBUG" if DEBUG else "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            # prevent duplicate log in console
+            "propagate": False,
+        },
+        "consumer": {
+            "handlers": ["console_consumer"],
+            "level": "DEBUG" if DEBUG else "INFO",
+            # prevent duplicate log in console
+            "propagate": False,
+        },
+    },
+}
