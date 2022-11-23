@@ -1,0 +1,247 @@
+import re
+from datetime import datetime
+from enum import Enum
+from urllib.parse import quote, unquote
+
+from BFBC2_MasterServer.tools import flatten
+
+SERVICE_OFFSET, SERVICE_LENGTH = (0x0, 0x4)
+KIND_OFFSET, KIND_LENGTH = (SERVICE_OFFSET + SERVICE_LENGTH, 0x4)
+LENGTH_OFFSET, LENGTH_LENGTH = (KIND_OFFSET + KIND_LENGTH, 0x4)
+HEADER_LENGTH = 0xC
+
+
+class PacketParseException(Exception):
+    pass
+
+
+class Packet:
+
+    service: str = None
+    kind: int = None
+
+    __length = 0
+    __data = {}
+
+    def __init__(self, **kwargs):
+        self.__data = {}
+        raw_data = kwargs.get("raw_data", None)
+
+        if raw_data is not None:
+            # Create packet from bytes (used to parse incoming packets)
+            self.__parse_raw_data(raw_data)
+        else:
+            # Create packet from arguments (used to create outgoing packets)
+            self.service = kwargs.get("service", None)
+            self.kind = kwargs.get("kind", None)
+
+            data = kwargs.get("data", None)
+
+            if data:
+                self.ParseTransactionData(data)
+
+    def __str__(self):
+        length = len(self.compile()) if self.__length == 0 else self.__length
+        return f"{self.service} {hex(self.kind)} ({length} bytes): {self.__data}"
+
+    def Get(self, key: str):
+        """Get value from packet"""
+        return self.__data.get(key, None)
+
+    def Set(self, key: str, value):
+        """Set value in packet"""
+        self.__data[key] = value
+
+    def __parse_raw_data(self, raw_data: bytes):
+        """Parse bytes into packet data"""
+
+        received_length = len(raw_data)
+
+        if received_length < HEADER_LENGTH:
+            raise PacketParseException(
+                f"Packet is too short to be valid (Expected at least 12 bytes, got {received_length})"
+            )
+
+        self.service = raw_data[
+            SERVICE_OFFSET : SERVICE_OFFSET + SERVICE_LENGTH
+        ].decode("utf-8")
+        self.kind = int.from_bytes(
+            raw_data[KIND_OFFSET : KIND_OFFSET + KIND_LENGTH], byteorder="big"
+        )
+        self.__length = int.from_bytes(
+            raw_data[LENGTH_OFFSET : LENGTH_OFFSET + LENGTH_LENGTH], byteorder="big"
+        )
+
+        if received_length != self.__length:
+            raise PacketParseException(
+                f"Packet length does not match (Received: {received_length}, Expected: {self.__length})"
+            )
+
+        self.ParseTransactionData(raw_data[HEADER_LENGTH:].decode("utf-8").split("\n"))
+
+    def ParseTransactionData(self, transaction_data):
+        """Add transaction data to packet"""
+
+        # If transaction data is null terminated, remove null terminator before parsing
+        if transaction_data[-1] == "\0":
+            transaction_data = transaction_data[:-1]
+
+        data_to_parse = [data.split("=", 2) for data in transaction_data]
+
+        # transaction_data is a list of strings in the format of "key=value"
+        arrays_to_parse = {}
+
+        # Sort transaction_data by keys (this is needed to parse lists)
+        transaction_data.sort(key=lambda x: x.split("=")[0])
+
+        for key, value in data_to_parse:
+            # Find all arrays
+
+            if key.endswith(".[]"):
+                # This is a list
+                key = key[:-3]
+
+                if key not in arrays_to_parse:
+                    # Create new dictionary in arrays_to_parse, so we will skip processing keys that are part of this list
+                    arrays_to_parse[key] = {}
+
+        for key, value in data_to_parse:
+            is_array_element = False
+
+            for array_key in arrays_to_parse:
+                if key.startswith(array_key):
+                    key_name, idx, subkey = key.split(
+                        ".", 2
+                    )  # Split key into array name and index
+
+                    if not arrays_to_parse[key_name].get(int(idx)):
+                        arrays_to_parse[key_name][int(idx)] = {}
+
+                    arrays_to_parse[key_name][int(idx)][subkey] = self.__parse_value(
+                        value
+                    )
+                    is_array_element = True
+                    break
+
+            if is_array_element:
+                continue
+
+            self.Set(key, self.__parse_value(value))
+
+        for array in arrays_to_parse:
+            self.Set(array, arrays_to_parse[array])
+
+    def __parse_value(self, value: str):
+        """Parse value from string"""
+        if value.isdigit():
+            return int(value)
+        else:
+            return unquote(value)
+
+    def __encode_string(self, value):
+        if isinstance(value, datetime):
+            temp_value = quote(value.strftime("%b-%d-%Y %H:%M:%S UTC"))
+        else:
+            temp_value = quote(str(value))
+
+        temp_value = temp_value.replace("%20", " ")
+
+        if temp_value.find(" ") != -1:
+            temp_value = '"' + temp_value + '"'
+
+        return re.sub(r"%[0-9A-F]{2}", lambda pat: pat.group(0).lower(), temp_value)
+
+    def compile(self):
+        temp_packet = self.service.encode()
+        temp_packet += int.to_bytes(self.kind, 4, byteorder="big")
+
+        temp_data = self.__convert_data()
+
+        temp_packet += int.to_bytes(HEADER_LENGTH + len(temp_data), 4, byteorder="big")
+        temp_packet += temp_data.encode()
+
+        return temp_packet
+
+    def __convert_data(self):
+        final_data = ""
+        temp_data = flatten(self.__data)
+
+        for key in temp_data:
+            value = temp_data[key]
+
+            if isinstance(value, Enum):
+                final_data += key + "=" + str(value.value) + "\n"
+            elif isinstance(value, list):
+                final_data += key + ".[]=" + str(len(value)) + "\n"
+                final_data += self.__process_dict(key, value)
+            else:
+                final_data += "%s=%s\n" % (key, self.__encode_string(value))
+
+        # EA uses the final NULL delimiter so we set the last char from the data to NULL
+        final_data = final_data[:-1]  # Remove last new line char
+        final_data += "\0"  # Append NULL
+
+        return final_data
+
+    def __process_dict(self, key, values, skip_idx=False):
+        processed_dict = ""
+
+        for x in range(len(values)):
+            if isinstance(values[x], dict):
+                for y in values[x]:
+                    if isinstance(values[x][y], list):
+                        processed_dict += (
+                            f"{key}.{x}.{y}" + ".[]=" + str(len(values[x][y])) + "\n"
+                        )
+                        processed_dict += self.__process_dict(
+                            f"{key}.{x}.{y}", values[x][y]
+                        )
+                    elif isinstance(values[x][y], dict):
+                        processed_dict += self.__process_dict(
+                            f"{key}.{x}.{y}", [values[x][y]], True
+                        )
+                    else:
+                        if skip_idx:
+                            processed_dict += (
+                                key
+                                + "."
+                                + y
+                                + "="
+                                + self.__encode_string(values[x][y])
+                                + "\n"
+                            )
+                        else:
+                            processed_dict += (
+                                key
+                                + "."
+                                + str(x)
+                                + "."
+                                + y
+                                + "="
+                                + self.__encode_string(values[x][y])
+                                + "\n"
+                            )
+            else:
+                if isinstance(values[x], list):
+                    processed_dict += f"{key}.{x}" + ".[]=" + str(len(values[x])) + "\n"
+                    processed_dict += self.__process_dict(f"{key}.{x}", values[x])
+                elif isinstance(values[x], dict):
+                    processed_dict += self.__process_dict(
+                        f"{key}.{x}", [values[x]], True
+                    )
+                else:
+                    if skip_idx:
+                        processed_dict += (
+                            key + "=" + self.__encode_string(values[x]) + "\n"
+                        )
+                    else:
+                        processed_dict += (
+                            key
+                            + "."
+                            + str(x)
+                            + "="
+                            + self.__encode_string(values[x])
+                            + "\n"
+                        )
+
+        return processed_dict
