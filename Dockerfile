@@ -17,7 +17,10 @@ WORKDIR /app
 
 ADD requirements.txt /app/requirements.txt
 ADD manage.py /app/manage.py
+
 ADD BFBC2_MasterServer /app/BFBC2_MasterServer
+ADD easo /app/easo
+ADD Plasma /app/Plasma
 
 COPY --from=build /out/wheels /tmp/wheels
 
