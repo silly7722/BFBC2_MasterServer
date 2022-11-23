@@ -1,0 +1,28 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install cross-compile tools
+      run: |
+       sudo apt update
+       sudo apt install -y qemu-user-static binfmt-support
+    
+    - name: Login to Docker Registry
+      run: echo ${{ secrets.REGISTRY_PASSWORD }} | docker login ${{ secrets.REGISTRY_URL }} -u action --password-stdin
+    
+    - name: Build and Push Docker image
+      run: docker buildx build -t ${{ secrets.REGISTRY_URL }}/emu/bfbc2:latest --platform linux/arm64 --push .
+      
