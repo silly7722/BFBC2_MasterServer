@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  database:
+    image: postgres:alpine
+    env_file:
+      - .env
+
+  redis:
+    image: redis:alpine
+
+  app:
+    build: .
+    volumes:
+      - ./BFBC2_MasterServer:/app/BFBC2_MasterServer
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - database
+      - redis
