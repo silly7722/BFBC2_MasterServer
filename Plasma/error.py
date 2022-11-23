@@ -21,6 +21,10 @@ class TransactionSkip:
     pass
 
 
+class TransactionException(Exception):
+    pass
+
+
 class TransactionError:
 
     errorCode: int
