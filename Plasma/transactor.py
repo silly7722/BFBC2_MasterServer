@@ -4,7 +4,7 @@ from enum import Enum
 
 from BFBC2_MasterServer.packet import HEADER_LENGTH, Packet
 
-from Plasma.error import Error, TransactionError, TransactionSkip
+from Plasma.error import Error, TransactionError, TransactionException, TransactionSkip
 from Plasma.services.connect import TXN as ConnectTXN
 from Plasma.services.connect import ConnectService
 
@@ -34,11 +34,11 @@ class Transactor:
         # Init services
         self.services[TransactionService.ConnectService] = ConnectService(connection)
 
-    async def start(self, service: TransactionService, txn, data):
+    async def start(self, service: TransactionService, txn: Enum, data: dict):
         """Start a unscheduled transaction"""
 
-        if txn not in self.allowed_uncheduled_transactions:
-            raise TransactionError("Transaction not allowed to be unscheduled")
+        if txn.value not in self.allowed_uncheduled_transactions:
+            raise TransactionException("Transaction not allowed to be unscheduled")
 
         # Unscheduled transactions are always simple, and have no transaction ID
 
