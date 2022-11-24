@@ -1,0 +1,3 @@
+Welcome to GrzybDev's Battlefield: Bad Company 2 Master Server Emulator!
+
+You're seeing this (debug) TOS because you're in server debug mode, to disable it unset DEBUG environment variable or set it to the equivalent of boolean False
