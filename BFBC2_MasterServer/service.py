@@ -22,7 +22,7 @@ class Service(ABC):
 
         try:
             resolver = self._get_resolver(txn)
-        except ValueError:
+        except KeyError:
             self.connection.logger.error(
                 f"Invalid transaction {txn} for service {self}"
             )
@@ -37,7 +37,13 @@ class Service(ABC):
     async def start_transaction(self, txn, data):
         """Start a scheduled transaction"""
 
-        creator = self._get_creator(txn)
+        try:
+            creator = self._get_creator(txn)
+        except KeyError:
+            self.connection.logger.error(
+                f"Invalid transaction {txn} for service {self}"
+            )
+            return TransactionError(Error.SYSTEM_ERROR)
 
         try:
             return await creator(data)
