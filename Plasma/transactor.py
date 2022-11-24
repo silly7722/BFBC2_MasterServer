@@ -4,7 +4,7 @@ from enum import Enum
 
 from BFBC2_MasterServer.packet import HEADER_LENGTH, Packet
 
-from Plasma.error import Error, TransactionError, TransactionException, TransactionSkip
+from Plasma.error import TransactionError, TransactionException, TransactionSkip
 from Plasma.services.account import AccountService
 from Plasma.services.connect import TXN as ConnectTXN
 from Plasma.services.connect import ConnectService
@@ -119,7 +119,9 @@ class Transactor:
             or not self.connection.initialized
             and service != TransactionService.ConnectService
         ):
-            transaction_response = TransactionError(Error.NOT_INITIALIZED)
+            transaction_response = TransactionError(
+                TransactionError.Code.NOT_INITIALIZED
+            )
         elif (
             transaction_kind == TransactionKind.Simple
             or transaction_kind == TransactionKind.SimpleResponse

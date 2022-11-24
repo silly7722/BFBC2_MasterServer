@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from Plasma.error import Error, TransactionError
+from Plasma.error import TransactionError
 
 
 class Service(ABC):
@@ -26,13 +26,13 @@ class Service(ABC):
             self.connection.logger.error(
                 f"Invalid transaction {txn} for service {self}"
             )
-            return TransactionError(Error.SYSTEM_ERROR)
+            return TransactionError(TransactionError.Code.SYSTEM_ERROR)
 
         try:
             return await resolver(data)
         except Exception:
             self.connection.logger.exception(f"Failed to handle transaction {txn}")
-            return TransactionError(Error.SYSTEM_ERROR)
+            return TransactionError(TransactionError.Code.SYSTEM_ERROR)
 
     async def start_transaction(self, txn, data):
         """Start a scheduled transaction"""
@@ -43,7 +43,7 @@ class Service(ABC):
             self.connection.logger.error(
                 f"Invalid transaction {txn} for service {self}"
             )
-            return TransactionError(Error.SYSTEM_ERROR)
+            return TransactionError(TransactionError.Code.SYSTEM_ERROR)
 
         try:
             return await creator(data)
@@ -51,4 +51,4 @@ class Service(ABC):
             self.connection.logger.exception(
                 f"Failed to create unscheduled transaction {txn}"
             )
-            return TransactionError(Error.SYSTEM_ERROR)
+            return TransactionError(TransactionError.Code.SYSTEM_ERROR)
