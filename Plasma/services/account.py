@@ -1,12 +1,18 @@
 import csv
 import json
 import os
+from datetime import date
 from enum import Enum
 from pathlib import Path
 
 from BFBC2_MasterServer.packet import Packet
 from BFBC2_MasterServer.service import Service
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from email_validator import EmailNotValidError, validate_email
+from Plasma.error import TransactionError
 
 
 class TXN(Enum):
@@ -53,6 +59,7 @@ class AccountService(Service):
     def __init__(self, connection) -> None:
         super().__init__(connection)
 
+        self.resolver_map[TXN.NuAddAccount] = self.__handle_add_account
         self.resolver_map[TXN.GetCountryList] = self.__handle_get_country_list
         self.resolver_map[TXN.NuGetTos] = self.__handle_get_tos
 
@@ -69,6 +76,110 @@ class AccountService(Service):
             locale = "test"
 
         return locale
+
+    async def __handle_add_account(self, data):
+        """Add a new account"""
+
+        errContainer = []
+        umodel = get_user_model()
+
+        # Check if nuid and password are provided
+        nuid = data.Get("nuid")
+        password = data.Get("password")
+
+        if not nuid or not password:
+            return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
+
+        try:
+            validation = validate_email(nuid, check_deliverability=True)
+            nuid = validation.email
+        except EmailNotValidError as e:
+            self.connection.logger.error(f"-- Not a valid email address. ({e})")
+
+            errContainer.append(
+                {
+                    "fieldName": "email",
+                    "fieldError": 6,
+                    "value": "INVALID_VALUE",
+                }
+            )
+
+            return TransactionError(
+                TransactionError.Code.PARAMETERS_ERROR, errContainer
+            )
+
+        try:
+            validate_password(password)
+        except ValidationError as e:
+            self.connection.logger.error(f"-- Not a valid password. ({e})")
+
+            errContainer.append(
+                {
+                    "fieldName": "password",
+                    "fieldError": 6,
+                    "value": "INVALID_VALUE",
+                }
+            )
+
+            return TransactionError(
+                TransactionError.Code.PARAMETERS_ERROR, errContainer
+            )
+
+        dateOfBirth = date(
+            data.Get("DOBYear"), data.Get("DOBMonth"), data.Get("DOBDay")
+        )
+
+        dateToday = date.today()
+
+        age = (
+            dateToday.year
+            - dateOfBirth.year
+            - ((dateToday.month, dateToday.day) < (dateOfBirth.month, dateOfBirth.day))
+        )
+
+        countryConfig = self.countryConfigOverrides.get(data.Get("country"), {})
+        errContainer = []
+
+        if countryConfig.get("registrationAgeLimit", 13) > age:
+            # New user is too young to register
+            errContainer.append(
+                {
+                    "fieldName": "dob",
+                    "fieldError": 15,
+                }
+            )
+
+            return TransactionError(
+                TransactionError.Code.PARAMETERS_ERROR, errContainer
+            )
+        elif await umodel.objects.user_exists(nuid):
+            # User already exists
+            return TransactionError(TransactionError.Code.ALREADY_REGISTERED)
+        else:
+            # Create user
+            await umodel.objects.create_user(
+                nuid=nuid,
+                password=password,
+                globalOptin=data.Get("globalOptin"),
+                thirdPartyOptin=data.Get("thirdPartyOptin"),
+                parentalEmail=data.Get("parentalEmail"),
+                dateOfBirth=dateOfBirth,
+                firstName=data.Get("first_Name"),
+                lastName=data.Get("last_Name"),
+                gender=data.Get("gender"),
+                address=data.Get("street"),
+                address2=data.Get("street2"),
+                city=data.Get("city"),
+                state=data.Get("state"),
+                zipCode=data.Get("zipCode"),
+                country=data.Get("country"),
+                language=data.Get("language"),
+                tosVersion=data.Get("tosVersion"),
+            )
+
+            # Create response
+            response = Packet()
+            return response
 
     async def __handle_get_country_list(self, data):
         """Get the list of countries"""
