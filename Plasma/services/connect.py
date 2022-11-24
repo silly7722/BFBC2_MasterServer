@@ -14,7 +14,7 @@ from BFBC2_MasterServer.globals import (
 from BFBC2_MasterServer.packet import Packet
 from BFBC2_MasterServer.service import Service
 from Plasma.enumerators.ClientType import ClientType
-from Plasma.error import TransactionSkip
+from Plasma.error import TransactionError, TransactionSkip
 
 
 class TXN(Enum):
@@ -85,6 +85,11 @@ class ConnectService(Service):
             "protocolVersion": data.Get("protocolVersion"),
             "fragmentSize": data.Get("fragmentSize"),
         }
+
+        # Check if all required fields were provided by client
+        if any(map(lambda x: x is None, client_data.values())):
+            self.connection.logger.error("Client sent invalid Hello packet")
+            return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
 
         await self.connection.initialize_connection(client_data)
 
