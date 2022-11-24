@@ -19,31 +19,57 @@ from Plasma.error import TransactionSkip
 
 class TXN(Enum):
     Hello = "Hello"
-    MemCheck = "MemCheck"
     Ping = "Ping"
-    GetPingSites = "GetPingSites"
     Goodbye = "Goodbye"
     Suicide = "Suicide"
+    MemCheck = "MemCheck"
+    GetPingSites = "GetPingSites"
 
 
 class ConnectService(Service):
     def __init__(self, connection) -> None:
         super().__init__(connection)
 
-        self.resolver_map[TXN.Hello] = self.__handle_hello
-        self.creator_map[TXN.MemCheck] = self.__create_memcheck
         self.creator_map[TXN.Ping] = self.__create_ping
-        self.resolver_map[TXN.MemCheck] = self.__handle_memcheck
+        self.creator_map[TXN.MemCheck] = self.__create_memcheck
+
+        self.resolver_map[TXN.Hello] = self.__handle_hello
         self.resolver_map[TXN.Ping] = self.__handle_ping
-        self.resolver_map[TXN.GetPingSites] = self.__get_ping_sites
         self.resolver_map[TXN.Goodbye] = self.__handle_goodbye
         self.resolver_map[TXN.Suicide] = self.__handle_suicide
+        self.resolver_map[TXN.MemCheck] = self.__handle_memcheck
+        self.resolver_map[TXN.GetPingSites] = self.__get_ping_sites
 
     def _get_resolver(self, txn):
         return self.resolver_map[TXN(txn)]
 
     def _get_creator(self, txn):
         return self.creator_map[TXN(txn)]
+
+    async def __create_ping(self, data):
+        """Create a Ping packet"""
+
+        response = Packet()
+        return response
+
+    async def __create_memcheck(self, data):
+        """Create a MemCheck packet"""
+
+        response = Packet()
+
+        # Never saw memcheck containing something (original server also always sends empty memcheck)
+        # But memcheck object should look like this
+        # {
+        #    "addr": integer (4 bytes),
+        #    "len": integer (4 bytes),
+        # }
+        # Never seen that in the wild, and above is just a guess based on my client reverse engineering
+        # No idea how this affects the client, but original server never sends it either so we send empty array here
+        response.Set("memcheck", [])
+        response.Set("type", 0)
+        response.Set("salt", "".join(random.choice(string.digits) for _ in range(10)))
+
+        return response
 
     async def __handle_hello(self, data):
         """Initial packet sent by client, used to determine client type, and other connection details"""
@@ -96,39 +122,33 @@ class ConnectService(Service):
 
         return response
 
-    async def __create_memcheck(self, data):
-        """Create a MemCheck packet"""
-
-        response = Packet()
-
-        # Never saw memcheck containing something (original server also always sends empty memcheck)
-        # But memcheck object should look like this
-        # {
-        #    "addr": integer (4 bytes),
-        #    "len": integer (4 bytes),
-        # }
-        # Never seen that in the wild, and above is just a guess based on my client reverse engineering
-        # No idea how this affects the client, but original server never sends it either so we send empty array here
-        response.Set("memcheck", [])
-        response.Set("type", 0)
-        response.Set("salt", "".join(random.choice(string.digits) for _ in range(10)))
-
-        return response
-
-    async def __create_ping(self, data):
-        """Create a Ping packet"""
-
-        response = Packet()
-        return response
-
-    async def __handle_memcheck(self, data):
-        """Handle a MemCheck packet"""
+    async def __handle_ping(self, data):
+        """Handle a Ping packet"""
 
         # Ignore
         return TransactionSkip()
 
-    async def __handle_ping(self, data):
-        """Handle a Ping packet"""
+    async def __handle_goodbye(self, data):
+        """Handle a Goodbye packet (sent by client when disconnecting)"""
+
+        # Just log why client disconnected
+        self.connection.logger.info(
+            f"Client disconnected (Reason: {data.Get('reason')}, Message: {data.Get('message')})"
+        )
+        return TransactionSkip()
+
+    async def __handle_suicide(self, data):
+        """Handle Suicide packet"""
+
+        # This packet only contains TXN, no idea what it's supposed to do
+        # It seems that it's client who would send this kind of transaction
+        # But I never managed to make game send this packet
+        # So ignore this packet
+
+        return TransactionSkip()
+
+    async def __handle_memcheck(self, data):
+        """Handle a MemCheck packet"""
 
         # Ignore
         return TransactionSkip()
@@ -169,22 +189,3 @@ class ConnectService(Service):
         response.Set("minPingSitesToPing", 0)
 
         return response
-
-    async def __handle_goodbye(self, data):
-        """Handle a Goodbye packet (sent by client when disconnecting)"""
-
-        # Just log why client disconnected
-        self.connection.logger.info(
-            f"Client disconnected (Reason: {data.Get('reason')}, Message: {data.Get('message')})"
-        )
-        return TransactionSkip()
-
-    async def __handle_suicide(self, data):
-        """Handle Suicide packet"""
-
-        # This packet only contains TXN, no idea what it's supposed to do
-        # It seems that it's client who would send this kind of transaction
-        # But I never managed to make game send this packet
-        # So ignore this packet
-
-        return TransactionSkip()
