@@ -1,7 +1,9 @@
+from asgiref.sync import sync_to_async
 from django.contrib.auth.base_user import BaseUserManager
 
 
 class UserManager(BaseUserManager):
+    @sync_to_async
     def create_user(self, nuid, password, **extra_fields):
         if not nuid or not password:
             raise ValueError(
@@ -16,6 +18,7 @@ class UserManager(BaseUserManager):
 
         return user
 
+    @sync_to_async
     def create_superuser(self, nuid, password, **extra_fields):
         extra_fields.setdefault("is_superuser", True)
 
@@ -24,5 +27,6 @@ class UserManager(BaseUserManager):
 
         return self.create_user(nuid, password, **extra_fields)
 
+    @sync_to_async
     def user_exists(self, nuid):
         return self.filter(nuid=nuid).exists()
