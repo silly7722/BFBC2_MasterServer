@@ -14,9 +14,9 @@ class TransactionService(Enum):
 
 
 class TransactionKind(Enum):
-    Initial = 0xC0000000
     InitialError = 0x66657272
-    Simple = 0x80000000
+    Simple = 0xC0000000
+    SimpleResponse = 0x80000000
     Chunked = 0xF0000000
     ChunkedResponse = 0xB0000000
 
@@ -40,23 +40,23 @@ class Transactor:
         if txn.value not in self.allowed_uncheduled_transactions:
             raise TransactionException("Transaction not allowed to be unscheduled")
 
-        # Unscheduled transactions are always simple, and have no transaction ID
+        # Unscheduled transactions are always "SimpleResponse" kind, and have no transaction ID
 
         packet_to_send = await self.services[service].start_transaction(txn, data)
 
         if isinstance(packet_to_send, TransactionError):
             packet = Packet()
-            packet.Set("TXN", packet_to_send.Get("TXN"))
             packet.service = service.value
-            packet.kind = TransactionKind.Simple.value
+            packet.kind = TransactionKind.SimpleResponse.value
+            packet.Set("TXN", packet_to_send.Get("TXN"))
             packet.Set("errorCode", packet_to_send.errorCode)
             packet.Set("localizedMessage", packet_to_send.localizedMessage)
             packet.Set("errorContainer", packet_to_send.errorContainer)
 
             await self.connection.send_packet(packet, 0)
         else:
-            packet_to_send.kind = TransactionKind.Simple.value
             packet_to_send.service = service.value
+            packet_to_send.kind = TransactionKind.SimpleResponse.value
             packet_to_send.Set("TXN", txn)
             await self.connection.send_packet(packet_to_send, 0)
 
@@ -87,14 +87,14 @@ class Transactor:
         message_tid = message.kind & 0x00FFFFFF
 
         if (
-            transaction_kind == TransactionKind.Initial
-            and not self.connection.initialized
+            not self.connection.initialized
+            and service == TransactionService.ConnectService
         ):
             # This is the first transaction from the client
             self.tid = message_tid  # Set the initial transaction id
 
         if message_tid != self.tid:
-            if transaction_kind == TransactionKind.Simple and message_tid == 0:
+            if transaction_kind == TransactionKind.SimpleResponse and message_tid == 0:
                 # Simple transactions with a transaction id of 0 are unscheduled transactions (responses)
                 # Check if this unscheduled transaction is allowed
 
@@ -112,14 +112,14 @@ class Transactor:
         # Handle the transaction
         if (
             not self.connection.initialized
-            and transaction_kind != TransactionKind.Initial
+            and transaction_kind != TransactionKind.Simple
             or not self.connection.initialized
             and service != TransactionService.ConnectService
         ):
             transaction_response = TransactionError(Error.NOT_INITIALIZED)
         elif (
-            transaction_kind == TransactionKind.Initial
-            or transaction_kind == TransactionKind.Simple
+            transaction_kind == TransactionKind.Simple
+            or transaction_kind == TransactionKind.SimpleResponse
         ):
             transaction_response = await self.services[service].handle(message)
         elif transaction_kind == TransactionKind.Chunked:
@@ -149,6 +149,11 @@ class Transactor:
             else:
                 # We haven't received all chunks yet
                 return
+        else:
+            self.connection.logger.error(
+                f"Invalid transaction kind {hex(transaction_kind_int)}"
+            )
+            return
 
         if transaction_response is None:
             self.connection.logger.error("Transaction service didn't return a response")
@@ -159,11 +164,11 @@ class Transactor:
         # Send the response
         if isinstance(transaction_response, TransactionError):
             packet = Packet()
-            packet.Set("TXN", message.Get("TXN"))
             packet.service = service.value
-            packet.kind = TransactionKind.Simple.value
+            packet.kind = TransactionKind.SimpleResponse.value
+            packet.Set("TXN", message.Get("TXN"))
 
-            if transaction_kind == TransactionKind.Initial:
+            if not self.connection.initialized:
                 packet.kind = TransactionKind.InitialError.value
                 packet.Set("TID", self.tid)
 
@@ -173,8 +178,8 @@ class Transactor:
 
             await self.connection.send_packet(packet, self.tid)
         else:
-            transaction_response.kind = TransactionKind.Simple.value
             transaction_response.service = service.value
+            transaction_response.kind = TransactionKind.SimpleResponse.value
             transaction_response.Set("TXN", message.Get("TXN"))
             message_bytes = transaction_response.compile()
 
