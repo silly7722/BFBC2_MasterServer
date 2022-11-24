@@ -86,7 +86,10 @@ class Transactor:
         # Verify that the transaction id is valid
         message_tid = message.kind & 0x00FFFFFF
 
-        if transaction_kind == TransactionKind.Initial:
+        if (
+            transaction_kind == TransactionKind.Initial
+            and not self.connection.initialized
+        ):
             # This is the first transaction from the client
             self.tid = message_tid  # Set the initial transaction id
 
