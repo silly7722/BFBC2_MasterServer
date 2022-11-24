@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "channels",
+    "Plasma",
 ]
 
 MIDDLEWARE = [
@@ -214,3 +215,5 @@ LOGGING = {
         },
     },
 }
+
+AUTH_USER_MODEL = "Plasma.Account"
