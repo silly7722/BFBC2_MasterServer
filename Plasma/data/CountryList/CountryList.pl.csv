@@ -1,0 +1,232 @@
+ISOCode,description
+AF,Afganistan
+ZA,Afryka Południowa
+AL,Albania
+DZ,Algieria
+AS,Amerykańskie Samoa
+AD,Andora
+AO,Angola
+AI,Anguilla
+AQ,Antarktyda
+AG,Antigua i Barbuda
+AN,Antyle Holenderskie
+SA,Arabia Saudyjska
+AR,Argentyna
+AM,Armenia
+AW,Aruba
+AU,Australia
+AT,Austria
+AZ,Azerbejdżan
+BH,Bahrain
+BD,Bangladesz
+BB,Barbados
+BE,Belgia
+BZ,Belize
+BJ,Benin
+BM,Bermudy
+BY,Białoruś
+BO,Boliwia
+BA,Bośnia i Hercegowina
+BW,Botswana
+BR,Brazylia
+BN,Brunei
+IO,Brytyjskie Terytorium na Oceanie Indyjskim
+BG,Bułgaria
+BF,Burkina Faso
+BI,Burundi
+BT,Butan
+CV,Cape Verde
+CL,Chile
+CN,Chiny
+HR,Chorwacja
+CR,Costa Rica
+CY,Cypr
+TD,Czad
+ME,Czarnogóra
+CZ,Czechy
+DK,Dania
+CD,Demokratyczna Republika Konga
+DM,Dominika
+DJ,Dżibuti
+EG,Egipt
+EC,Ekwador
+SV,El Salvador
+ER,Erytrea
+EE,Estonia
+ET,Etiopia
+FK,Falklandy
+FJ,Fidżi
+PH,Filipiny
+FI,Finlandia
+FR,Francja
+TF,Francuskie Terytorium Południowe
+GA,Gabon
+GM,Gambia
+GH,Ghana
+GI,Gibraltar
+GR,Grecja
+GD,Grenada
+GL,Grenlandia
+GE,Gruzja
+GU,Guam
+GF,Gujana Francuska
+GP,Gwadelupa
+GT,Gwatemala
+GN,Gwinea
+GW,Gwinea-Bissau
+GQ,Gwinea Równikowa
+HT,Haiti
+ES,Hiszpania
+HN,Honduras
+IN,India
+ID,Indonezja
+IE,Irlandia
+IS,Islandia
+IL,Izrael
+JM,Jamajka
+JP,Japonia
+YE,Jemen
+JO,Jordania
+KY,Kajmany
+KH,Kambodża
+CM,Kamerun
+CA,Kanada
+QA,Katar
+KZ,Kazachstan
+KE,Kenia
+KG,Kirgizja
+KI,Kiribati
+CO,Kolumbia
+KM,Komory
+KR,Korea Pn.
+KW,Kuwejt
+LA,Laos
+LS,Lesotho
+LB,Liban
+LR,Liberia
+LI,Liechtenstein
+LT,Litwa
+CG,Ludowa Republika Konga
+LU,Luksemburg
+LV,Łotwa
+MK,Macedonia
+MG,Madagaskar
+MW,Malawi
+MV,Malediwy
+MY,Malezja
+ML,Mali
+MT,Malta
+MA,Maroko
+MQ,Martynika
+MR,Mauretania
+MU,Mauritius
+YT,Mayotte
+MX,Meksyk
+FM,Mikronezja
+MD,Mołdawia
+MC,Monako
+MN,Mongolia
+MS,Montserrat
+MZ,Mozambik
+MM,Myanmar
+NA,Namibia
+NR,Nauru
+NP,Nepal
+NL,Niderlandy
+DE,Niemcy
+NE,Niger
+NG,Nigeria
+NI,Nikaragua
+NU,Niue
+NO,Norwegia
+NC,Nowa Kaledonia
+NZ,Nowa Zelandia
+OM,Oman
+PK,Pakistan
+PW,Palau
+PA,Panama
+PG,Papua Nowa Gwinea
+PY,Paragwaj
+PE,Peru
+PN,Pitcairn
+PF,Polinezja Francuska
+PL,Polska
+GS,Południowa Georgia i Sandwich Południowy
+PT,Portugalia
+MP,Północne Mariany
+PR,Puerto Rico
+DO,Republika Dominikańska
+GY,Republika Gujany
+CF,Republika Środkowej Afryki
+RE,Reunion
+RU,Rosja
+RO,Rumunia
+RW,Rwanda
+WS,Samoa
+SM,San Marino
+SN,Senegal
+RS,Serbia
+SC,Seszele
+SL,Sierra Leone
+SG,Singapur
+SK,Słowacja
+SI,Słowenia
+SO,Somalia
+UM,Sporady Środkowopolinezyjskie
+LK,Sri Lanka
+KN,St.Kitts and Nevis
+LC,St. Lucia
+PM,St. Pierre and Miquelon
+VC,St.Vincent i Grenadyny
+SZ,Suazi
+SR,Surinam
+CH,Szwajcaria
+SE,Szwecja
+TJ,Tadżykistan
+TH,Tajlandia
+TW,Tajwan
+TZ,Tanzania
+PS,Terytorium Palestyńskie
+TL,Timor Wschodni
+TG,Togo
+TK,Tokelau
+TO,Tonga
+TT,Trynidad i Tobago
+TN,Tunezja
+TR,Turcja
+TM,Turkmenistan
+TV,Tuvalu
+UG,Uganda
+UA,Ukraina
+UY,Urugwaj
+US,USA
+UZ,Uzbekistan
+VU,Vanuatu
+WF,Wallis i Futuna
+VA,Watykan
+VE,Wenezuela
+HU,Węgry
+GB,Wielka Brytania
+VN,Wietnam
+IT,Włochy
+CI,Wybrzeże Kości Słoniowej
+BV,Wyspa Bouvet
+CX,Wyspa Bożego Narodzenia
+SH,Wyspa Św. Heleny
+ST,Wyspa Św. Tomasza i Książęca
+BS,Wyspy Bahama
+CK,Wyspy Cooka
+VG,Wyspy Dziewicze Brytyjskie
+VI,Wyspy Dziewicze Stanów Zjednoczonych
+HM,Wyspy Heard i McDonalda
+CC,Wyspy Kokosowe
+MH,Wyspy Marshalla
+NF,Wyspy Norfolk
+FO,Wyspy Owcze
+SB,Wyspy Salomona
+SJ,Wyspy Svalbard i Jan Mayen
+TC,Wyspy Turks i Caicos
+EH,Zachodnia Sahara
+ZM,Zambia
+ZW,Zimbabwe
+AE,Zjednoczone Emiraty Arabskie

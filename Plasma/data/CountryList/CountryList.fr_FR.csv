@@ -1,0 +1,232 @@
+ISOCode,description
+AF,Afghanistan
+ZA,Afrique du Sud
+AL,Albanie
+DZ,Algérie
+DE,Allemagne
+AD,Andorre
+AO,Angola
+AI,Anguilla
+AQ,Antarctique
+AG,Antigua et Barbuda
+AN,Antilles hollandaises
+SA,Arabie Saoudite
+AR,Argentine
+AM,Arménie
+AW,Aruba
+AU,Australie
+AT,Autriche
+AZ,Azerbaïdjan
+BS,Bahamas
+BH,Bahreïn
+BD,Bangladesh
+BB,Barbade
+BE,Belgique
+BZ,Belize
+BJ,Bénin
+BM,Bermudes
+BT,Bhoutan
+BY,Biélorussie
+BO,Bolivie
+BA,Bosnie-Herzégovine
+BW,Botswana
+BR,Brésil
+BN,Brunei
+BG,Bulgarie
+BF,Burkina Faso
+BI,Burundi
+KH,Cambodge
+CM,Cameroun
+CA,Canada
+CV,Cap Vert
+CL,Chili
+CN,Chine
+CY,Chypre
+VA,Cité du Vatican
+CO,Colombie
+KM,Comores
+CD,"Congo, République démocratique du "
+CG,"Congo, République populaire du "
+KR,Corée
+CR,Costa Rica
+CI,Côte d'Ivoire
+HR,Croatie
+DK,Danemark
+DJ,Djibouti
+DM,Dominique
+EG,Egypte
+AE,Emirats arabes unis
+EC,Equateur
+ER,Erythrée
+ES,Espagne
+EE,Estonie
+US,Etats-Unis d'Amérique
+ET,Ethiopie
+RU,Fédération de Russie
+FJ,Fidji
+FI,Finlande
+FR,France
+GA,Gabon
+GM,Gambie
+GE,Géorgie
+GS,Géorgie du Sud et les îles Sandwich du Sud
+GH,Ghana
+GI,Gibraltar
+GB,Grande-Bretagne
+GR,Grèce
+GD,Grenade
+GL,Groenland
+GP,Guadeloupe
+GU,Guam
+GT,Guatemala
+GN,Guinée
+GW,Guinée-Bissau
+GQ,Guinée équatoriale
+GY,"Guyana, République coopérative de "
+GF,Guyane française
+HT,Haïti
+HN,Honduras
+HU,Hongrie
+CX,Ile Christmas
+MU,Ile Maurice
+PN,Ile Pitcairn
+BV,Iles Bouvet
+KY,Iles Caïmans
+CC,Iles Cocos
+CK,Iles Cook
+FK,Iles Falkland (Malouines)
+FO,Iles Féroé
+HM,Iles Heard et McDonald
+MP,Iles Marianne du Nord
+MH,Iles Marshall
+UM,Iles Mineures Américaines
+NF,Iles Norfolk
+SB,Iles Salomon
+SJ,Iles Svalbard et Jan Mayen
+TC,Iles Turks et Caicos
+VI,Iles Vierges des Etats-Unis
+VG,Iles Vierges du Royaume-Uni
+IN,Inde
+ID,Indonésie
+IE,Irlande
+IS,Islande
+IL,Israël
+IT,Italie
+JM,Jamaïque
+JP,Japon
+JO,Jordanie
+KZ,Kazakhstan
+KE,Kenya
+KG,Kirghizistan
+KI,Kiribati
+KW,Koweït
+LS,Lesotho
+LV,Lettonie
+LB,Liban
+LR,Liberia
+LI,Liechtenstein
+LT,Lituanie
+LU,Luxembourg
+MK,Macédoine
+MG,Madagascar
+MY,Malaisie
+MW,Malawi
+MV,Maldives
+ML,Mali
+MT,Malte
+MA,Maroc
+MQ,Martinique
+MR,Mauritanie
+YT,Mayotte
+MX,Mexique
+FM,Micronésie
+MD,Moldavie
+MC,Monaco
+MN,Mongolie
+ME,Monténégro
+MS,Montserrat
+MZ,Mozambique
+MM,Myanmar
+NA,Namibie
+NR,Nauru
+NP,Népal
+NI,Nicaragua
+NE,Niger
+NG,Nigeria
+NU,Niue
+NO,Norvège
+NC,Nouvelle-Calédonie
+NZ,Nouvelle-Zélande
+OM,Oman
+UG,Ouganda
+UZ,Ouzbékistan
+PK,Pakistan
+PW,Palau
+PA,Panama
+PG,Papouasie-Nouvelle-Guinée
+PY,Paraguay
+NL,Pays-Bas
+PE,Pérou
+PH,Philippines
+PL,Pologne
+PF,Polynésie française
+PR,Porto Rico
+PT,Portugal
+QA,Qatar
+CF,République centrafricaine
+DO,République dominicaine
+LA,République populaire démocratique lao
+CZ,République tchèque
+RE,Réunion
+RO,Roumanie
+RW,Rwanda
+EH,Sahara occidental
+LC,Sainte Lucie
+KN,Saint-Kitts-et-Nevis
+SM,Saint-Marin
+VC,Saint-Vincent-et-Grenadines
+SV,Salvador
+WS,Samoa
+AS,Samoa américaines
+ST,Sao Tomé et Principe
+SN,Sénégal
+RS,Serbie
+SC,Seychelles
+SL,Sierra Leone
+SG,Singapour
+SK,Slovaquie (République slovaque)
+SI,Slovénie
+SO,Somalie
+LK,Sri Lanka
+SH,Ste-Hélène
+PM,St-Pierre-et-Miquelon
+SE,Suède
+CH,Suisse
+SR,Surinam
+SZ,Swaziland
+TJ,Tadjikistan
+TW,Taiwan
+TZ,Tanzanie
+TD,Tchad
+TF,Terres australes et antarctiques françaises
+IO,Territoires britanniques de l'océan Indien
+PS,Territoires palestiniens
+TH,Thaïlande
+TL,Timor oriental
+TG,Togo
+TK,Tokelau
+TO,Tonga
+TT,Trinité-et-Tobago
+TN,Tunisie
+TM,Turkménistan
+TR,Turquie
+TV,Tuvalu
+UA,Ukraine
+UY,Uruguay
+VU,Vanuatu
+VE,Venezuela
+VN,Viêtnam
+WF,Wallis et Futuna
+YE,Yémen
+ZM,Zambie
+ZW,Zimbabwe

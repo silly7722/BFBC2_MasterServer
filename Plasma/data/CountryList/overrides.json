@@ -1,0 +1,16 @@
+{
+    "CA": {
+        "allowEmailsDefaultValue": 1
+    },
+    "FR": {
+        "parentalControlAgeLimit": 16,
+        "registrationAgeLimit": 16
+    },
+    "DE": {
+        "parentalControlAgeLimit": 14,
+        "registrationAgeLimit": 14
+    },
+    "US": {
+        "allowEmailsDefaultValue": 1
+    }
+}
