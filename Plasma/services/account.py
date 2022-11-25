@@ -20,6 +20,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from email_validator import EmailNotValidError, validate_email
+from Plasma.enumerators.ActivationResult import ActivationResult
 from Plasma.enumerators.ClientType import ClientType
 from Plasma.error import TransactionError
 from Plasma.models import Entitlement
@@ -76,6 +77,7 @@ class AccountService(Service):
         self.resolver_map[TXN.NuAddAccount] = self.__handle_add_account
         self.resolver_map[TXN.GetCountryList] = self.__handle_get_country_list
         self.resolver_map[TXN.NuGetTos] = self.__handle_get_tos
+        self.resolver_map[TXN.NuEntitleGame] = self.__handle_entitle_game
 
     def _get_resolver(self, txn):
         return self.resolver_map[TXN(txn)]
@@ -443,5 +445,34 @@ class AccountService(Service):
         response = Packet()
         response.Set("tos", tos_content)
         response.Set("version", tos_version)
+
+        return response
+
+    async def __handle_entitle_game(self, data):
+        """Entitle game (user enters game key while login)"""
+
+        response_data = await self.__internal_login(data, allow_unentitled=True)
+
+        if isinstance(response_data, TransactionError):
+            return response_data
+
+        user, user_lkey, encryptedLoginInfo = response_data
+
+        key = data.Get("key")
+        activation_result = await Entitlement.objects.activate_game(user, key)
+
+        if activation_result == ActivationResult.INVALID_KEY:
+            return TransactionError(TransactionError.Code.CODE_NOT_FOUND)
+        elif activation_result == ActivationResult.ALREADY_USED:
+            return TransactionError(TransactionError.Code.CODE_ALREADY_USED)
+
+        response = Packet()
+        response.Set("nuid", user.nuid)
+        response.Set("lkey", user_lkey)
+        response.Set("profileId", user.id)
+        response.Set("userId", user.id)
+
+        if encryptedLoginInfo:
+            response.Set("encryptedLoginInfo", encryptedLoginInfo)
 
         return response
