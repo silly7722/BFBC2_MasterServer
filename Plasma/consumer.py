@@ -58,8 +58,8 @@ class PlasmaConsumer(BFBC2Consumer):
             # Remove consumer session from cache
             cache.delete(f"userSession:{self.loggedUser.id}")
 
-            # Set user session to expire in 6 hours (approximitely that's how long the session is valid in original server)
-            cache.touch(f"userLoginKey:{self.loggedUser.id}", 60 * 60 * 6)
+            # Set user session to expire in 3 hours (approximitely that's how long the session is valid in original server)
+            cache.touch(f"userLoginKey:{self.loggedUser.id}", 60 * 60 * 3)
 
     async def receive(self, text_data=None, bytes_data=None):
         message = await super().receive(text_data, bytes_data)
