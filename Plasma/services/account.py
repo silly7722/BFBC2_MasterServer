@@ -166,10 +166,13 @@ class AccountService(Service):
             if tos_version != user.tosVersion:
                 return TransactionError(TransactionError.Code.TOS_OUT_OF_DATE)
 
-            if not allow_unentitled and await Entitlement.objects.is_entitled_for_game(
+            is_entitled = await Entitlement.objects.is_entitled_for_game(
                 user, self.connection.clientString
-            ):
-                return TransactionError(TransactionError.Code.USER_NOT_ENTITLED)
+            )
+
+            if not is_entitled:
+                if not allow_unentitled:
+                    return TransactionError(TransactionError.Code.NOT_ENTITLED_TO_GAME)
 
         active_session = cache.get(f"userSession:{user.id}")
         channel_layer = get_channel_layer()
