@@ -149,15 +149,8 @@ class Entitlement(models.Model):
         help_text="ID of the product this entitlement grants access to.",
     )
 
-    status = models.CharField(
-        max_length=255,
-        null=True,
-        blank=True,
-        verbose_name="Status",
-        help_text="Status of this entitlement.",
-    )
     version = models.IntegerField(
-        verbose_name="Version", help_text="Version of the entitlement."
+        default=0, verbose_name="Version", help_text="Version of the entitlement."
     )
 
     isGameEntitlement = models.BooleanField(
