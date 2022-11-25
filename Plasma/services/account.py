@@ -217,8 +217,11 @@ class AccountService(Service):
                 + "."
             )
 
-        # Save login key that never expires (we set expiration time when user logs out)
-        cache.set(f"userLoginKey:{user.id}", user_lkey, timeout=None)
+            # Save login key that never expires (we set expiration time when user logs out)
+            cache.set(f"userLoginKey:{user.id}", user_lkey, timeout=None)
+        else:
+            # User already has login key, so we need to delete it from cache
+            cache.touch(f"userLoginKey:{user.id}", timeout=None)
 
         self.connection.loggedUser = user
         self.connection.loggedUserKey = user_lkey
