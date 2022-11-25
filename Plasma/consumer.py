@@ -9,6 +9,7 @@ from BFBC2_MasterServer.globals import (
     SERVER_MEMCHECK_INTERVAL,
     SERVER_PING_INTERVAL,
 )
+from django.core.cache import cache
 from packaging import version
 
 from Plasma.enumerators.ClientLocale import ClientLocale
@@ -36,6 +37,8 @@ class PlasmaConsumer(BFBC2Consumer):
     memcheckTimer = None
     pingTimer = None
 
+    loggedUser, loggedUserKey = None, None
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.transactor = Transactor(self)
@@ -50,6 +53,13 @@ class PlasmaConsumer(BFBC2Consumer):
         if self.memcheckTimer is not None:
             self.memcheckTimer.cancel()
             self.memcheckTimer = None
+
+        if self.loggedUser and self.loggedUserKey:
+            # Remove consumer session from cache
+            cache.delete(f"userSession:{self.loggedUser.id}")
+
+            # Set user session to expire in 24 hours (approximitely that's how long the session is valid in original server)
+            cache.touch(f"userLoginKey:{self.loggedUser.id}", 60 * 60 * 24)
 
     async def receive(self, text_data=None, bytes_data=None):
         message = await super().receive(text_data, bytes_data)
