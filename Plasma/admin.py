@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from Plasma.models import Account
+from Plasma.models import Account, Entitlement, SerialKey
 
 # Register your models here.
 
@@ -101,4 +101,34 @@ class AccountAdmin(BaseUserAdmin):
     list_filter = ("nuid",)
 
 
+class EntitlementAdmin(admin.ModelAdmin):
+    list_display = [
+        "id",
+        "account",
+        "tag",
+    ]
+    list_filter = (
+        "account",
+        "tag",
+    )
+
+
+class SerialKeyAdmin(admin.ModelAdmin):
+    list_display = [
+        "id",
+        "key",
+        "targets",
+        "is_game_key",
+        "is_used",
+        "is_permanent",
+        "created_at",
+        "updated_at",
+        "used_at",
+        "used_by",
+    ]
+    list_filter = ("key", "targets", "is_game_key", "is_used", "is_permanent")
+
+
 admin.site.register(Account, AccountAdmin)
+admin.site.register(Entitlement, EntitlementAdmin)
+admin.site.register(SerialKey, SerialKeyAdmin)
