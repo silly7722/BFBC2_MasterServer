@@ -178,17 +178,18 @@ class AccountService(Service):
         channel_layer = get_channel_layer()
 
         if active_session:
-            self.connection.logger.warning(
-                f"User {user.id} has active session, destroying it"
-            )
+            if active_session != self.connection.channel_name:
+                self.connection.logger.warning(
+                    f"User {user.id} has active session, destroying it"
+                )
 
-            await channel_layer.send(
-                active_session,
-                {
-                    "type": "external.send",
-                    "message": {"TXN": ConnectTXN.Goodbye.value, "reason": 2},
-                },
-            )
+                await channel_layer.send(
+                    active_session,
+                    {
+                        "type": "external.send",
+                        "message": {"TXN": ConnectTXN.Goodbye.value, "reason": 2},
+                    },
+                )
 
         cache.set(f"userSession:{user.id}", self.connection.channel_name, timeout=None)
 
