@@ -169,3 +169,42 @@ class Entitlement(models.Model):
         verbose_name = "Entitlement"
         verbose_name_plural = "Entitlements"
         ordering = ("id",)
+
+
+class SerialKey(models.Model):
+    key = models.CharField(max_length=255, verbose_name="Serial Key", unique=True)
+    targets = models.CharField(
+        max_length=255,
+        verbose_name="Targets",
+        help_text="What this key activates. (Semicolon seperated)",
+    )
+
+    is_game_key = models.BooleanField(
+        default=False,
+        verbose_name="Is Game Key",
+        help_text="Is this key a game key? (Will add to group instead of permissions)",
+    )
+    is_used = models.BooleanField(
+        default=False, verbose_name="Is Used", help_text="Is this key already used?"
+    )
+    is_permanent = models.BooleanField(
+        default=False,
+        verbose_name="Is Permanent",
+        help_text="Is this key permanent? (Will not expire after usage)",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    used_at = models.DateTimeField(null=True, blank=True)
+    used_by = models.ForeignKey(
+        Account, null=True, blank=True, on_delete=models.SET_NULL
+    )
+
+    def __str__(self):
+        return self.key + " (" + self.targets + ")"
+
+    class Meta:
+        verbose_name = "Serial Key"
+        verbose_name_plural = "Serial Keys"
+        ordering = ("id",)
