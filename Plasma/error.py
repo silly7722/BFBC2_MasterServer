@@ -62,3 +62,5 @@ class TransactionError:
                 return "The data necessary for this transaction was not found"
             case self.Code.RECORD_NOT_FOUND:
                 return "Record not found"
+
+        return "Unknown error"

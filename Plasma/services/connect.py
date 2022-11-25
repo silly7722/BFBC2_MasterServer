@@ -98,8 +98,6 @@ class ConnectService(Service):
             "subDomain": "BFBC2",
         }
 
-        theater_ip, theater_port = (None, None)
-
         if self.connection.clientType == ClientType.CLIENT:
             theater_ip = THEATER_CLIENT_IP
             theater_port = THEATER_CLIENT_PORT
