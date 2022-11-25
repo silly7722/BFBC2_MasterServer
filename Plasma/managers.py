@@ -1,5 +1,8 @@
+from datetime import datetime
+
 from asgiref.sync import sync_to_async
 from django.contrib.auth.base_user import BaseUserManager
+from django.db import models
 
 
 class UserManager(BaseUserManager):
@@ -35,3 +38,16 @@ class UserManager(BaseUserManager):
     def accept_tos(self, user, tos_version):
         user.tosVersion = tos_version
         user.save()
+
+
+class EntitlementManager(models.Manager):
+    @sync_to_async
+    def is_entitled_for_game(self, user, game_id):
+        return self.filter(
+            account=user,
+            tag=game_id,
+            grantDate__gte=datetime.now(),
+            terminationDate__lte=datetime.now(),
+            status="ACTIVE",
+            isGameEntitlement=True,
+        ).exists()

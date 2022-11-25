@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 
-from Plasma.managers import UserManager
+from Plasma.managers import EntitlementManager, UserManager
 
 
 # Create your models here.
@@ -115,4 +115,64 @@ class Account(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = "Account"
         verbose_name_plural = "Accounts"
+        ordering = ("id",)
+
+
+class Entitlement(models.Model):
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    tag = models.CharField(max_length=255, verbose_name="Entitlement Tag")
+
+    grantDate = models.DateTimeField(
+        verbose_name="Grant Date",
+        help_text="Date when this entitlement was (or will be) granted.",
+        auto_now_add=True,
+    )
+    terminationDate = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Termination Date",
+        help_text="Date when this entitlement will be terminated.",
+    )
+
+    groupName = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="Group Name",
+        help_text="Name of the group this entitlement grants access to.",
+    )
+    productId = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="Product ID",
+        help_text="ID of the product this entitlement grants access to.",
+    )
+
+    status = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="Status",
+        help_text="Status of this entitlement.",
+    )
+    version = models.IntegerField(
+        verbose_name="Version", help_text="Version of the entitlement."
+    )
+
+    isGameEntitlement = models.BooleanField(
+        default=False,
+        verbose_name="Game Entitlement",
+        help_text="Is this entitlement a game entitlement?",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = EntitlementManager()
+
+    def __str__(self):
+        return f"{self.account} - {self.tag}"
+
+    class Meta:
+        verbose_name = "Entitlement"
+        verbose_name_plural = "Entitlements"
         ordering = ("id",)
