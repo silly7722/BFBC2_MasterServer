@@ -30,3 +30,8 @@ class UserManager(BaseUserManager):
     @sync_to_async
     def user_exists(self, nuid):
         return self.filter(nuid=nuid).exists()
+
+    @sync_to_async
+    def accept_tos(self, user, tos_version):
+        user.tosVersion = tos_version
+        user.save()
