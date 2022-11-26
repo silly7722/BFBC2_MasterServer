@@ -38,6 +38,7 @@ class PlasmaConsumer(BFBC2Consumer):
     pingTimer = None
 
     loggedUser, loggedUserKey = None, None
+    loggedPersona, loggedPersonaKey = None, None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -60,6 +61,10 @@ class PlasmaConsumer(BFBC2Consumer):
 
             # Set user session to expire in 3 hours (approximitely that's how long the session is valid in original server)
             cache.touch(f"userLoginKey:{self.loggedUser.id}", 60 * 60 * 3)
+
+        if self.loggedPersona and self.loggedPersonaKey:
+            # Set persona session to expire in 3 hours (approximitely that's how long the session is valid in original server)
+            cache.touch(f"personaLoginKey:{self.loggedPersona.id}", 60 * 60 * 3)
 
     async def receive(self, text_data=None, bytes_data=None):
         message = await super().receive(text_data, bytes_data)
