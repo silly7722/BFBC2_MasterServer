@@ -11,7 +11,7 @@ from pathlib import Path
 from asgiref.sync import sync_to_async
 from BFBC2_MasterServer.packet import Packet
 from BFBC2_MasterServer.service import Service
-from channels.auth import database_sync_to_async, login
+from channels.auth import database_sync_to_async, get_user, login
 from channels.layers import get_channel_layer
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
@@ -23,7 +23,7 @@ from email_validator import EmailNotValidError, validate_email
 from Plasma.enumerators.ActivationResult import ActivationResult
 from Plasma.enumerators.ClientType import ClientType
 from Plasma.error import TransactionError
-from Plasma.models import Entitlement
+from Plasma.models import Entitlement, Persona
 from Plasma.services.connect import TXN as ConnectTXN
 
 
@@ -75,8 +75,12 @@ class AccountService(Service):
 
         self.resolver_map[TXN.NuLogin] = self.__handle_login
         self.resolver_map[TXN.NuAddAccount] = self.__handle_add_account
+        self.resolver_map[TXN.NuAddPersona] = self.__handle_add_persona
+        self.resolver_map[TXN.NuDisablePersona] = self.__handle_disable_persona
         self.resolver_map[TXN.GetCountryList] = self.__handle_get_country_list
         self.resolver_map[TXN.NuGetTos] = self.__handle_get_tos
+        self.resolver_map[TXN.NuLoginPersona] = self.__handle_login_persona
+        self.resolver_map[TXN.NuGetPersonas] = self.__handle_get_personas
         self.resolver_map[TXN.NuEntitleGame] = self.__handle_entitle_game
 
     def _get_resolver(self, txn):
@@ -364,6 +368,37 @@ class AccountService(Service):
         response = Packet()
         return response
 
+    async def __handle_add_persona(self, data):
+        """Add a new persona"""
+
+        user = await get_user(self.connection.scope)
+        name = data.Get("name")
+
+        if not name:
+            return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
+
+        success = await Persona.objects.create_persona(user, name)
+
+        if not success:
+            return TransactionError(TransactionError.Code.ALREADY_REGISTERED)
+
+        response = Packet()
+        return response
+
+    async def __handle_disable_persona(self, data):
+        """Remove a persona"""
+
+        user = await get_user(self.connection.scope)
+        name = data.Get("name")
+
+        success = await Persona.objects.delete_persona(user, name)
+
+        if not success:
+            return TransactionError(TransactionError.Code.TRANSACTION_DATA_NOT_FOUND)
+        else:
+            response = Packet()
+            return response
+
     async def __handle_get_country_list(self, data):
         """Get the list of countries"""
 
@@ -445,6 +480,58 @@ class AccountService(Service):
         response = Packet()
         response.Set("tos", tos_content)
         response.Set("version", tos_version)
+
+        return response
+
+    async def __handle_login_persona(self, data):
+        """Login a persona"""
+
+        user = await get_user(self.connection.scope)
+        name = data.Get("name")
+
+        persona = await Persona.objects.get_persona(user, name)
+
+        if persona is None:
+            return TransactionError(TransactionError.Code.USER_NOT_FOUND)
+
+        persona_lkey = cache.get(f"personaLoginKey:{user.id}")
+
+        if not persona_lkey:
+            # Generate new login key, because user doesn't have one (or previous one expired)
+            persona_lkey = (
+                "".join(
+                    random.choice(string.ascii_letters + string.digits + "-_")
+                    for _ in range(27)
+                )
+                + "."
+            )
+
+            # Save login key that never expires (we set expiration time when user logs out)
+            cache.set(f"personaLoginKey:{user.id}", persona_lkey, timeout=None)
+        else:
+            # User already has login key, so we need to delete it from cache
+            cache.touch(f"personaLoginKey:{user.id}", timeout=None)
+
+        self.connection.loggedPersona = persona
+        self.connection.loggedPersonaKey = persona_lkey
+
+        response = Packet()
+        response.Set("lkey", persona_lkey)
+        response.Set(
+            "profileId", persona.id
+        )  # Again, game doesn't seem to care about this
+        response.Set("userId", user.id)
+
+        return response
+
+    async def __handle_get_personas(self, data):
+        """Get the list of personas"""
+
+        user = await get_user(self.connection.scope)
+        personas = await Persona.objects.list_personas(user)
+
+        response = Packet()
+        response.Set("personas", personas)
 
         return response
 
