@@ -101,3 +101,40 @@ class EntitlementManager(models.Manager):
             await sync_to_async(key.save)()
 
         return ActivationResult.SUCCESS
+
+
+class PersonaManager(models.Manager):
+    @sync_to_async
+    def list_personas(self, account):
+        personas_list = self.filter(account=account)
+        return [persona.name for persona in personas_list]
+
+    @sync_to_async
+    def create_persona(self, account, name):
+        # Check if persona name is already taken first
+        if self.filter(account=account, name=name).exists():
+            return False
+
+        persona = self.model(account=account, name=name)
+        persona.save()
+
+        return True
+
+    @sync_to_async
+    def delete_persona(self, account, name):
+        persona = self.filter(account=account, name=name).first()
+
+        if persona is None:
+            return False
+
+        persona.delete()
+        return True
+
+    @sync_to_async
+    def get_persona(self, account, name):
+        return self.filter(account=account, name=name).first()
+
+    @sync_to_async
+    def search_personas(self, account, name):
+        name = name.replace("_*", "")
+        return self.filter(name__icontains=name).exclude(account=account)

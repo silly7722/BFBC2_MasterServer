@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 
-from Plasma.managers import EntitlementManager, UserManager
+from Plasma.managers import EntitlementManager, PersonaManager, UserManager
 
 
 # Create your models here.
@@ -207,4 +207,21 @@ class SerialKey(models.Model):
     class Meta:
         verbose_name = "Serial Key"
         verbose_name_plural = "Serial Keys"
+        ordering = ("id",)
+
+
+class Persona(models.Model):
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    name = models.CharField(max_length=16, verbose_name="Soldier Name", unique=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = PersonaManager()
+
+    def __str__(self):
+        return f"{self.name}"
+
+    class Meta:
+        verbose_name = "Persona"
+        verbose_name_plural = "Personas"
         ordering = ("id",)
