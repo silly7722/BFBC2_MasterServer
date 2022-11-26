@@ -5,6 +5,7 @@ from enum import Enum
 from BFBC2_MasterServer.packet import HEADER_LENGTH, Packet
 
 from Plasma.error import TransactionError, TransactionException, TransactionSkip
+from Plasma.services.account import TXN as AccountTXN
 from Plasma.services.account import AccountService
 from Plasma.services.connect import TXN as ConnectTXN
 from Plasma.services.connect import ConnectService
@@ -28,7 +29,19 @@ class Transactor:
     tid = 0  # Transaction ID
 
     services = {}
-    allowed_uncheduled_transactions = [ConnectTXN.MemCheck.value, ConnectTXN.Ping.value]
+    allowed_unscheduled_transactions = [
+        ConnectTXN.MemCheck.value,
+        ConnectTXN.Ping.value,
+    ]
+    allowed_transactions_without_auth = [
+        # All transactions from ConnectService are allowed without auth (not included in this list)
+        # Only some transactions from AccountService are allowed without auth (included in this list)
+        AccountTXN.NuLogin.value,
+        AccountTXN.NuAddAccount.value,
+        AccountTXN.GetCountryList.value,
+        AccountTXN.NuGetTos.value,
+        AccountTXN.NuEntitleGame.value,
+    ]
 
     def __init__(self, connection):
         self.connection = connection
@@ -37,10 +50,37 @@ class Transactor:
         self.services[TransactionService.ConnectService] = ConnectService(connection)
         self.services[TransactionService.AccountService] = AccountService(connection)
 
+    async def get_response(self, service, message):
+        """Get response from a transaction"""
+
+        if not self.connection.loggedUser and not self.connection.loggedUserKey:
+            # User is not logged in, check if the transaction is allowed without auth
+
+            if (
+                service == TransactionService.ConnectService
+                or message.Get("TXN") in self.allowed_transactions_without_auth
+            ):
+                # Transaction is allowed without auth
+                transaction_response = await self.services[service].handle(message)
+            else:
+                # Transaction is not allowed without auth
+                self.connection.logger.error(
+                    f"Transaction {message.Get('TXN')} not allowed without auth"
+                )
+
+                transaction_response = TransactionError(
+                    TransactionError.Code.SESSION_NOT_AUTHORIZED
+                )
+        else:
+            # User is logged in
+            transaction_response = await self.services[service].handle(message)
+
+        return transaction_response
+
     async def start(self, service: TransactionService, txn: Enum, data: dict):
         """Start a unscheduled transaction"""
 
-        if txn.value not in self.allowed_uncheduled_transactions:
+        if txn.value not in self.allowed_unscheduled_transactions:
             raise TransactionException("Transaction not allowed to be unscheduled")
 
         # Unscheduled transactions are always "SimpleResponse" kind, and have no transaction ID
@@ -101,7 +141,7 @@ class Transactor:
                 # Simple transactions with a transaction id of 0 are unscheduled transactions (responses)
                 # Check if this unscheduled transaction is allowed
 
-                if message.Get("TXN") not in self.allowed_uncheduled_transactions:
+                if message.Get("TXN") not in self.allowed_unscheduled_transactions:
                     self.connection.logger.error(
                         f"Unscheduled transaction {message.Get('TXN')} not allowed"
                     )
@@ -126,7 +166,7 @@ class Transactor:
             transaction_kind == TransactionKind.Simple
             or transaction_kind == TransactionKind.SimpleResponse
         ):
-            transaction_response = await self.services[service].handle(message)
+            transaction_response = await self.get_response(service, message)
         elif transaction_kind == TransactionKind.Chunked:
             self.incoming_queue.append(message)
 
@@ -150,7 +190,7 @@ class Transactor:
                     service=service.value, kind=message.kind, data=decoded_data
                 )
 
-                transaction_response = self.services[service].handle(message)
+                transaction_response = await self.get_response(service, message)
             else:
                 # We haven't received all chunks yet
                 return
