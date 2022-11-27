@@ -14,6 +14,7 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
 from django.core.asgi import get_asgi_application
 from Plasma.urls import websocket_urlpatterns as plasma_websocket_urlpatterns
+from Theater.urls import websocket_urlpatterns as theater_websocket_urlpatterns
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "BFBC2_MasterServer.settings")
 
@@ -23,7 +24,9 @@ application = ProtocolTypeRouter(
     {
         "http": django_asgi_app,
         "websocket": AllowedHostsOriginValidator(
-            AuthMiddlewareStack(URLRouter(plasma_websocket_urlpatterns))
+            AuthMiddlewareStack(
+                URLRouter(plasma_websocket_urlpatterns + theater_websocket_urlpatterns)
+            )
         ),
     }
 )
