@@ -106,10 +106,21 @@ class EntitlementAdmin(admin.ModelAdmin):
         "id",
         "account",
         "tag",
+        "groupName",
+        "productId",
+        "grantDate",
+        "terminationDate",
+        "version",
+        "isGameEntitlement",
     ]
     list_filter = (
         "account",
         "tag",
+        "groupName",
+        "productId",
+        "grantDate",
+        "terminationDate",
+        "isGameEntitlement",
     )
 
 
@@ -117,8 +128,6 @@ class SerialKeyAdmin(admin.ModelAdmin):
     list_display = [
         "id",
         "key",
-        "targets",
-        "is_game_key",
         "is_used",
         "is_permanent",
         "created_at",
@@ -126,7 +135,7 @@ class SerialKeyAdmin(admin.ModelAdmin):
         "used_at",
         "used_by",
     ]
-    list_filter = ("key", "targets", "is_game_key", "is_used", "is_permanent")
+    list_filter = ("key", "is_used", "is_permanent")
 
 
 admin.site.register(Account, AccountAdmin)
