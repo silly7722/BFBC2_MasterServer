@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from Plasma.models import Account, Entitlement, SerialKey
+from Plasma.models import Account, Entitlement, Persona, SerialKey
 
 # Register your models here.
 
@@ -138,6 +138,15 @@ class SerialKeyAdmin(admin.ModelAdmin):
     list_filter = ("key", "is_used", "is_permanent")
 
 
+class PersonaAdmin(admin.ModelAdmin):
+    list_display = ["id", "account", "name", "created_at"]
+    list_filter = (
+        "account",
+        "name",
+    )
+
+
 admin.site.register(Account, AccountAdmin)
 admin.site.register(Entitlement, EntitlementAdmin)
 admin.site.register(SerialKey, SerialKeyAdmin)
+admin.site.register(Persona, PersonaAdmin)
