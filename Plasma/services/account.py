@@ -81,6 +81,7 @@ class AccountService(Service):
         self.resolver_map[TXN.NuGetTos] = self.__handle_get_tos
         self.resolver_map[TXN.NuLoginPersona] = self.__handle_login_persona
         self.resolver_map[TXN.NuGetPersonas] = self.__handle_get_personas
+        self.resolver_map[TXN.NuGetEntitlements] = self.__handle_get_entitlements
         self.resolver_map[TXN.NuEntitleGame] = self.__handle_entitle_game
 
     def _get_resolver(self, txn):
@@ -540,6 +541,33 @@ class AccountService(Service):
 
         response = Packet()
         response.Set("personas", personas)
+
+        return response
+
+    async def __handle_get_entitlements(self, data):
+        """Get the list of entitlements"""
+
+        user = await get_user(self.connection.scope)
+        groupName = data.Get("groupName")
+
+        entitlements = await Entitlement.objects.list_entitlements(user, groupName)
+        entitlements_data = [
+            {
+                "grantDate": entitlement.grantDate,
+                "groupName": entitlement.groupName,
+                "userId": entitlement.account.id,
+                "entitlementTag": entitlement.tag,
+                "version": entitlement.version,
+                "terminationDate": entitlement.terminationDate,
+                "productId": entitlement.productId,
+                "entitlementId": entitlement.id,
+                "status": entitlement.status,
+            }
+            for entitlement in entitlements
+        ]
+
+        response = Packet()
+        response.Set("entitlements", entitlements_data)
 
         return response
 

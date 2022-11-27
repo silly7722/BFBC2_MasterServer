@@ -102,6 +102,30 @@ class EntitlementManager(models.Manager):
 
         return ActivationResult.SUCCESS
 
+    @sync_to_async
+    def list_entitlements(self, user, groupName):
+        filtered_entitlements = self.filter(
+            account=user,
+            groupName=groupName,
+            grantDate__lt=timezone.now(),
+            isGameEntitlement=False,
+        )
+
+        never_expires = filtered_entitlements.filter(terminationDate=None)
+        entitlements = []
+
+        if never_expires.exists():
+            entitlements = [entitlement for entitlement in never_expires]
+
+        timed_entitlements = filtered_entitlements.filter(
+            terminationDate__gt=timezone.now()
+        )
+
+        if timed_entitlements.exists():
+            entitlements.extend([entitlement for entitlement in timed_entitlements])
+
+        return entitlements
+
 
 class PersonaManager(models.Manager):
     @sync_to_async
