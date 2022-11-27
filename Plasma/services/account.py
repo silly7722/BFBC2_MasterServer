@@ -11,6 +11,7 @@ from pathlib import Path
 from asgiref.sync import sync_to_async
 from BFBC2_MasterServer.packet import Packet
 from BFBC2_MasterServer.service import Service
+from BFBC2_MasterServer.tools import legacy_b64encode
 from channels.auth import database_sync_to_async, get_user, login
 from channels.layers import get_channel_layer
 from django.conf import settings
@@ -81,6 +82,7 @@ class AccountService(Service):
         self.resolver_map[TXN.NuGetTos] = self.__handle_get_tos
         self.resolver_map[TXN.NuLoginPersona] = self.__handle_login_persona
         self.resolver_map[TXN.NuGetPersonas] = self.__handle_get_personas
+        self.resolver_map[TXN.GetTelemetryToken] = self.__handle_get_telemetry_token
         self.resolver_map[TXN.NuGetEntitlements] = self.__handle_get_entitlements
         self.resolver_map[TXN.NuEntitleGame] = self.__handle_entitle_game
 
@@ -530,6 +532,36 @@ class AccountService(Service):
             "profileId", persona.id
         )  # Again, game doesn't seem to care about this
         response.Set("userId", user.id)
+
+        return response
+
+    async def __handle_get_telemetry_token(self, data):
+        """Get telemetry token"""
+        token = "0.0.0.0,9946,"
+
+        locale = str(self.connection.locale.value).replace("_", "")
+
+        if len(locale) == 2:
+            locale = locale + locale.upper()
+
+        token += locale
+
+        # Token also have some encoded data (for telemetry)
+        # We don't need it, so we just fill it with zeros
+
+        token += (
+            "\0" * 104
+        )  # Token length is 104 bytes (at least that's what I've seen in original server)
+        token = legacy_b64encode(token).decode("utf-8")
+
+        response = Packet()
+        response.Set("telemetryToken", token)
+        response.Set(
+            "enabled",
+            "CA,MX,PR,US,VI,AD,AF,AG,AI,AL,AM,AN,AO,AQ,AR,AS,AW,AX,AZ,BA,BB,BD,BF,BH,BI,BJ,BM,BN,BO,BR,BS,BT,BV,BW,BY,BZ,CC,CD,CF,CG,CI,CK,CL,CM,CN,CO,CR,CU,CV,CX,DJ,DM,DO,DZ,EC,EG,EH,ER,ET,FJ,FK,FM,FO,GA,GD,GE,GF,GG,GH,GI,GL,GM,GN,GP,GQ,GS,GT,GU,GW,GY,HM,HN,HT,ID,IL,IM,IN,IO,IQ,IR,IS,JE,JM,JO,KE,KG,KH,KI,KM,KN,KP,KR,KW,KY,KZ,LA,LB,LC,LI,LK,LR,LS,LY,MA,MC,MD,ME,MG,MH,ML,MM,MN,MO,MP,MQ,MR,MS,MU,MV,MW,MY,MZ,NA,NC,NE,NF,NG,NI,NP,NR,NU,OM,PA,PE,PF,PG,PH,PK,PM,PN,PS,PW,PY,QA,RE,RS,RW,SA,SB,SC,clntSock,SG,SH,SJ,SL,SM,SN,SO,SR,ST,SV,SY,SZ,TC,TD,TF,TG,TH,TJ,TK,TL,TM,TN,TO,TT,TV,TZ,UA,UG,UM,UY,UZ,VA,VC,VE,VG,VN,VU,WF,WS,YE,YT,ZM,ZW,ZZ",
+        )
+        response.Set("filters", "")
+        response.Set("disabled", "")
 
         return response
 
