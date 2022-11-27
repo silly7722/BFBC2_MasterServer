@@ -94,6 +94,7 @@ class Packet:
         # Sort transaction_data by keys (this is needed to parse lists)
         transaction_data.sort(key=lambda x: x.split("=")[0])
 
+        i = 0
         for key, value in data_to_parse:
             # Find all arrays
 
@@ -103,23 +104,36 @@ class Packet:
 
                 if key not in arrays_to_parse:
                     # Create new dictionary in arrays_to_parse, so we will skip processing keys that are part of this list
-                    arrays_to_parse[key] = {}
+                    arrays_to_parse[key] = []
+
+            i += 1
 
         for key, value in data_to_parse:
             is_array_element = False
 
             for array_key in arrays_to_parse:
                 if key.startswith(array_key):
-                    key_name, idx, subkey = key.split(
-                        ".", 2
-                    )  # Split key into array name and index
+                    try:
+                        key_name, idx, subkey = key.split(
+                            ".", 2
+                        )  # Split key into array name and index
+                    except ValueError:
+                        key_name, idx = key.split(".")
+                        subkey = None
 
-                    if not arrays_to_parse[key_name].get(int(idx)):
-                        arrays_to_parse[key_name][int(idx)] = {}
+                    if subkey:
+                        if len(arrays_to_parse[array_key]) <= int(idx):
+                            arrays_to_parse[array_key].append({})
 
-                    arrays_to_parse[key_name][int(idx)][subkey] = self.__parse_value(
-                        value
-                    )
+                        arrays_to_parse[key_name][int(idx)][
+                            subkey
+                        ] = self.__parse_value(value)
+                    else:
+                        if isinstance(arrays_to_parse[key_name], dict):
+                            arrays_to_parse[key_name] = []
+
+                        arrays_to_parse[key_name].append(self.__parse_value(value))
+
                     is_array_element = True
                     break
 
