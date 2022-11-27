@@ -103,17 +103,19 @@ class Transactor:
             packet_to_send.Set("TXN", txn)
             await self.connection.send_packet(packet_to_send, 0)
 
-    async def finish(self, message: Packet):
-        """Finish transaction started by client"""
-
+    async def verify_transaction(self, message):
         # Verify that the service is valid
+        error = False
+
         try:
             service = TransactionService(message.service)
         except ValueError:
             self.connection.logger.error(
                 f"Invalid transaction service {message.service}"
             )
-            return
+
+            service = None
+            error = True
 
         # Verify that the transaction kind is valid
         transaction_kind_int = message.kind & 0xFF000000
@@ -124,7 +126,9 @@ class Transactor:
             self.connection.logger.error(
                 f"Invalid transaction type {hex(transaction_kind_int)}"
             )
-            return
+
+            transaction_kind = None
+            error = True
 
         # Verify that the transaction id is valid
         message_tid = message.kind & 0x00FFFFFF
@@ -145,60 +149,76 @@ class Transactor:
                     self.connection.logger.error(
                         f"Unscheduled transaction {message.Get('TXN')} not allowed"
                     )
-                    return
+
+                    error = True
             else:
                 self.connection.logger.error(
                     f"Invalid transaction id, expected {self.tid}, got {message_tid}. Ignoring message..."
                 )
-                return
+                error = True
 
-        # Handle the transaction
-        if (
-            not self.connection.initialized
-            and transaction_kind != TransactionKind.Simple
-            or not self.connection.initialized
-            and service != TransactionService.ConnectService
-        ):
-            transaction_response = TransactionError(
-                TransactionError.Code.NOT_INITIALIZED
-            )
-        elif (
-            transaction_kind == TransactionKind.Simple
-            or transaction_kind == TransactionKind.SimpleResponse
-        ):
-            transaction_response = await self.get_response(service, message)
-        elif transaction_kind == TransactionKind.Chunked:
-            self.incoming_queue.append(message)
+        return service, transaction_kind, transaction_kind_int, error
 
-            received_length = 0
+    async def finish(self, message: Packet):
+        """Finish transaction started by client"""
 
-            for incoming_message in self.incoming_queue:
-                received_length += len(incoming_message.Get("data"))
+        (
+            service,
+            transaction_kind,
+            transaction_kind_int,
+            verifyError,
+        ) = await self.verify_transaction(message)
 
-            if received_length == message.Get("size"):
-                # We have received all chunks, process the transaction
-                encoded_data = ""
+        if verifyError:
+            transaction_response = TransactionError(TransactionError.Code.SYSTEM_ERROR)
+        else:
+            # Handle the transaction
+            if (
+                not self.connection.initialized
+                and transaction_kind != TransactionKind.Simple
+                or not self.connection.initialized
+                and service != TransactionService.ConnectService
+            ):
+                transaction_response = TransactionError(
+                    TransactionError.Code.NOT_INITIALIZED
+                )
+            elif (
+                transaction_kind == TransactionKind.Simple
+                or transaction_kind == TransactionKind.SimpleResponse
+            ):
+                transaction_response = await self.get_response(service, message)
+            elif transaction_kind == TransactionKind.Chunked:
+                self.incoming_queue.append(message)
+
+                received_length = 0
 
                 for incoming_message in self.incoming_queue:
-                    encoded_data += incoming_message.Get("data")
+                    received_length += len(incoming_message.Get("data"))
 
-                self.incoming_queue.clear()
+                if received_length == message.Get("size"):
+                    # We have received all chunks, process the transaction
+                    encoded_data = ""
 
-                decoded_data = b64decode(encoded_data)
+                    for incoming_message in self.incoming_queue:
+                        encoded_data += incoming_message.Get("data")
 
-                message = Packet(
-                    service=service.value, kind=message.kind, data=decoded_data
-                )
+                    self.incoming_queue.clear()
 
-                transaction_response = await self.get_response(service, message)
+                    decoded_data = b64decode(encoded_data)
+
+                    message = Packet(
+                        service=service.value, kind=message.kind, data=decoded_data
+                    )
+
+                    transaction_response = await self.get_response(service, message)
+                else:
+                    # We haven't received all chunks yet
+                    return
             else:
-                # We haven't received all chunks yet
+                self.connection.logger.error(
+                    f"Invalid transaction kind {hex(transaction_kind_int)}"
+                )
                 return
-        else:
-            self.connection.logger.error(
-                f"Invalid transaction kind {hex(transaction_kind_int)}"
-            )
-            return
 
         if transaction_response is None:
             self.connection.logger.error("Transaction service didn't return a response")
@@ -209,7 +229,7 @@ class Transactor:
         # Send the response
         if isinstance(transaction_response, TransactionError):
             packet = Packet()
-            packet.service = service.value
+            packet.service = service.value if service is not None else message.service
             packet.kind = TransactionKind.SimpleResponse.value
             packet.Set("TXN", message.Get("TXN"))
 
