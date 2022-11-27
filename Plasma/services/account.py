@@ -584,23 +584,9 @@ class AccountService(Service):
         groupName = data.Get("groupName")
 
         entitlements = await Entitlement.objects.list_entitlements(user, groupName)
-        entitlements_data = [
-            {
-                "grantDate": entitlement.grantDate,
-                "groupName": entitlement.groupName,
-                "userId": entitlement.account.id,
-                "entitlementTag": entitlement.tag,
-                "version": entitlement.version,
-                "terminationDate": entitlement.terminationDate,
-                "productId": entitlement.productId,
-                "entitlementId": entitlement.id,
-                "status": entitlement.status,
-            }
-            for entitlement in entitlements
-        ]
 
         response = Packet()
-        response.Set("entitlements", entitlements_data)
+        response.Set("entitlements", entitlements)
 
         return response
 

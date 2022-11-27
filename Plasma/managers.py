@@ -91,7 +91,20 @@ class EntitlementManager(models.Manager):
         if timed_entitlements.exists():
             entitlements.extend([entitlement for entitlement in timed_entitlements])
 
-        return entitlements
+        return [
+            {
+                "grantDate": entitlement.grantDate,
+                "groupName": entitlement.groupName,
+                "userId": entitlement.account.id,
+                "entitlementTag": entitlement.tag,
+                "version": entitlement.version,
+                "terminationDate": entitlement.terminationDate,
+                "productId": entitlement.productId,
+                "entitlementId": entitlement.id,
+                "status": "ACTIVE",
+            }
+            for entitlement in entitlements
+        ]
 
     async def activate_key(self, user, key):
         from Plasma.models import SerialKey
