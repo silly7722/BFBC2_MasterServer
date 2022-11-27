@@ -178,11 +178,6 @@ class SerialKey(models.Model):
         help_text="What this key activates. (Semicolon seperated)",
     )
 
-    is_game_key = models.BooleanField(
-        default=False,
-        verbose_name="Is Game Key",
-        help_text="Is this key a game key? (Will add to group instead of permissions)",
-    )
     is_used = models.BooleanField(
         default=False, verbose_name="Is Used", help_text="Is this key already used?"
     )
