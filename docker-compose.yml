@@ -15,6 +15,7 @@ services:
       - ./BFBC2_MasterServer:/app/BFBC2_MasterServer
       - ./easo:/app/easo
       - ./Plasma:/app/Plasma
+      - ./Theater:/app/Theater
     ports:
       - "8000:8000"
     env_file:

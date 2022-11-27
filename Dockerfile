@@ -21,6 +21,7 @@ ADD manage.py /app/manage.py
 ADD BFBC2_MasterServer /app/BFBC2_MasterServer
 ADD easo /app/easo
 ADD Plasma /app/Plasma
+ADD Theater /app/Theater
 
 COPY --from=build /out/wheels /tmp/wheels
 
