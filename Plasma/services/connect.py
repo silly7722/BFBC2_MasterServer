@@ -74,6 +74,9 @@ class ConnectService(Service):
     async def __handle_hello(self, data):
         """Initial packet sent by client, used to determine client type, and other connection details"""
 
+        if self.connection.initialized:
+            raise TransactionError(TransactionError.Code.SYSTEM_ERROR)
+
         client_data = {
             "clientString": data.Get("clientString"),
             "clientPlatform": data.Get("clientPlatform"),
