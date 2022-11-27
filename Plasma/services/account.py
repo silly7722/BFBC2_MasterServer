@@ -615,7 +615,7 @@ class AccountService(Service):
         user, user_lkey, encryptedLoginInfo = response_data
 
         key = data.Get("key")
-        activation_result = await Entitlement.objects.activate_game(user, key)
+        activation_result, _ = await Entitlement.objects.activate_key(user, key)
 
         if activation_result == ActivationResult.INVALID_KEY:
             return TransactionError(TransactionError.Code.CODE_NOT_FOUND)

@@ -1,3 +1,6 @@
+import json
+from base64 import b64decode
+
 from asgiref.sync import sync_to_async
 from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
@@ -66,42 +69,6 @@ class EntitlementManager(models.Manager):
 
             return await sync_to_async(timed_entitlements.exists)()
 
-    async def activate_game(self, user, key):
-        from Plasma.models import SerialKey
-
-        valid_keys = await sync_to_async(SerialKey.objects.filter)(
-            key=key, is_game_key=True
-        )
-        game_targets = []
-
-        if await sync_to_async(valid_keys.exists)():
-            key = await sync_to_async(SerialKey.objects.get)(key=key)
-            game_targets = key.targets.split(";")
-        else:
-            return ActivationResult.INVALID_KEY
-
-        if key.is_used:
-            return ActivationResult.ALREADY_USED
-
-        for game in game_targets:
-            if await self.is_entitled_for_game(user, game):
-                continue
-
-            await sync_to_async(self.create)(
-                account=user,
-                tag=game,
-                grantDate=timezone.now(),
-                isGameEntitlement=True,
-            )
-
-        if not key.is_permanent:
-            key.is_used = True
-            key.used_at = timezone.now()
-            key.used_by = user
-            await sync_to_async(key.save)()
-
-        return ActivationResult.SUCCESS
-
     @sync_to_async
     def list_entitlements(self, user, groupName):
         filtered_entitlements = self.filter(
@@ -125,6 +92,60 @@ class EntitlementManager(models.Manager):
             entitlements.extend([entitlement for entitlement in timed_entitlements])
 
         return entitlements
+
+    async def activate_key(self, user, key):
+        from Plasma.models import SerialKey
+
+        valid_key = await sync_to_async(SerialKey.objects.filter)(key=key)
+
+        if not await sync_to_async(valid_key.exists)():
+            return ActivationResult.INVALID_KEY, []
+
+        key = await sync_to_async(SerialKey.objects.get)(key=key)
+
+        if key.is_used:
+            return ActivationResult.ALREADY_USED, []
+
+        encoded_targets = key.targets.split(";")
+        activated_list = []
+
+        for target in encoded_targets:
+            decoded_target = b64decode(target).decode("utf-8")
+            target = json.loads(decoded_target)
+
+            current_entitlements = await self.list_entitlements(
+                user, target.get("group")
+            )
+            already_entitled = False
+
+            for entitlement in current_entitlements:
+                if entitlement["entitlementTag"] == target.get("tag"):
+                    already_entitled = True
+                    break
+
+            if already_entitled:
+                continue
+
+            terminationDate = target.get("terminateAfter")
+
+            if terminationDate:
+                terminationDate = timezone.now() + timezone.timedelta(
+                    seconds=terminationDate
+                )
+
+            activated_entitlement = await sync_to_async(self.create)(
+                account=user,
+                tag=target.get("tag"),
+                groupName=target.get("group"),
+                productId=target.get("product"),
+                grantDate=timezone.now(),
+                terminationDate=terminationDate,
+                isGameEntitlement=target.get("game", False),
+            )
+
+            activated_list.append(activated_entitlement)
+
+        return ActivationResult.SUCCESS, activated_entitlement
 
 
 class PersonaManager(models.Manager):
