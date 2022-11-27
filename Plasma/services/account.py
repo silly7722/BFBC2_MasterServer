@@ -391,6 +391,9 @@ class AccountService(Service):
         user = await get_user(self.connection.scope)
         name = data.Get("name")
 
+        if not name:
+            return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
+
         success = await Persona.objects.delete_persona(user, name)
 
         if not success:
@@ -488,6 +491,9 @@ class AccountService(Service):
 
         user = await get_user(self.connection.scope)
         name = data.Get("name")
+
+        if not name:
+            return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
 
         persona = await Persona.objects.get_persona(user, name)
 
