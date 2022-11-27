@@ -196,7 +196,7 @@ class SerialKey(models.Model):
     )
 
     def __str__(self):
-        return self.key + " (" + self.targets + ")"
+        return self.key
 
     class Meta:
         verbose_name = "Serial Key"
