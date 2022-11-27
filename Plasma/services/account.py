@@ -85,6 +85,7 @@ class AccountService(Service):
         self.resolver_map[TXN.GetTelemetryToken] = self.__handle_get_telemetry_token
         self.resolver_map[TXN.NuGetEntitlements] = self.__handle_get_entitlements
         self.resolver_map[TXN.NuEntitleGame] = self.__handle_entitle_game
+        self.resolver_map[TXN.GetLockerURL] = self.__handle_get_locker_url
 
     def _get_resolver(self, txn):
         return self.resolver_map[TXN(txn)]
@@ -629,5 +630,17 @@ class AccountService(Service):
 
         if encryptedLoginInfo:
             response.Set("encryptedLoginInfo", encryptedLoginInfo)
+
+        return response
+
+    async def __handle_get_locker_url(self, data):
+        """Get locker URL"""
+
+        # Original server URL is http://bfbc2.gos.ea.com/easo/fileupload/locker2.jsp
+        # I modified it so it'll target "fileupload_locker" view in "easo" app
+        # See: easo/urls.py and easo/views.py
+
+        response = Packet()
+        response.Set("URL", f"http://bfbc2.gos.ea.com/easo/fileupload/locker2.jsp")
 
         return response
