@@ -173,8 +173,7 @@ class Entitlement(models.Model):
 
 class SerialKey(models.Model):
     key = models.CharField(max_length=255, verbose_name="Serial Key", unique=True)
-    targets = models.CharField(
-        max_length=255,
+    targets = models.TextField(
         verbose_name="Targets",
         help_text="What this key activates. (Semicolon seperated)",
     )
