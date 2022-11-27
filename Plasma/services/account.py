@@ -85,6 +85,7 @@ class AccountService(Service):
         self.resolver_map[TXN.GetTelemetryToken] = self.__handle_get_telemetry_token
         self.resolver_map[TXN.NuGetEntitlements] = self.__handle_get_entitlements
         self.resolver_map[TXN.NuEntitleGame] = self.__handle_entitle_game
+        self.resolver_map[TXN.NuEntitleUser] = self.__handle_entitle_user
         self.resolver_map[TXN.GetLockerURL] = self.__handle_get_locker_url
 
     def _get_resolver(self, txn):
@@ -616,6 +617,26 @@ class AccountService(Service):
 
         if encryptedLoginInfo:
             response.Set("encryptedLoginInfo", encryptedLoginInfo)
+
+        return response
+
+    async def __handle_entitle_user(self, data):
+        """User enters key"""
+
+        user = await get_user(self.connection.scope)
+        key = data.Get("key")
+
+        activation_result, activated_products = await Entitlement.objects.activate_key(
+            user, key
+        )
+
+        if activation_result == ActivationResult.INVALID_KEY:
+            return TransactionError(TransactionError.Code.CODE_NOT_FOUND)
+        elif activation_result == ActivationResult.ALREADY_USED:
+            return TransactionError(TransactionError.Code.CODE_ALREADY_USED)
+
+        response = Packet()
+        response.Set("productList", activated_products)
 
         return response
 
