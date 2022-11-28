@@ -49,9 +49,8 @@ class TheaterConsumer(BFBC2Consumer):
                 text_data=f"WARNING: Your protocol version ({self.prot}) is not officially supported by this server emulator, some features may not work properly. Please install latest supported game version by this server emulator (Which is 795745)"
             )
 
-            return
-
-        if self.vers != version.parse("1.0"):
+        if self.vers != version.parse("1.0") or self.vers != version.parse("2.0"):
+            # 1.0 - Client, 2.0 - Server
             self.logger.warning(
                 f"Game version {self.vers} is not officially supported by this server emulator!"
             )
@@ -59,8 +58,6 @@ class TheaterConsumer(BFBC2Consumer):
             await self.send(
                 text_data=f"WARNING: Your game version ({self.vers}) is not officially supported by this server emulator, some features may not work properly. Please install latest supported game version by this server emulator (Which is 795745)"
             )
-
-            return
 
         if self.sdkVersion != version.parse("5.1.2.0.0"):
             self.logger.warning(
@@ -70,7 +67,5 @@ class TheaterConsumer(BFBC2Consumer):
             await self.send(
                 text_data=f"WARNING: SDK version ({self.sdkVersion}) is not officially supported by this server emulator, some features may not work properly. Please install latest supported game version by this server emulator (Which is 795745)"
             )
-
-            return
 
         self.initialized = True
