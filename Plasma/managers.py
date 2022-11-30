@@ -238,4 +238,8 @@ class PersonaManager(models.Manager):
     @sync_to_async
     def search_personas(self, account, name):
         name = name.replace("_*", "")
-        return self.filter(name__icontains=name).exclude(account=account)
+        filtered_personas = self.filter(name__icontains=name).exclude(account=account)
+        return [
+            {"name": owner.name, "id": owner.id, "type": 1}
+            for owner in filtered_personas
+        ]
