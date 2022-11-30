@@ -243,3 +243,10 @@ class PersonaManager(models.Manager):
             {"name": owner.name, "id": owner.id, "type": 1}
             for owner in filtered_personas
         ]
+
+    @sync_to_async
+    def suggest_personas(self, account, keywords, max_results):
+        filtered_personas = self.filter(name__icontains__in=keywords)[
+            :max_results
+        ].exclude(account=account)
+        return [persona.name for persona in filtered_personas]
