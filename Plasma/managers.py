@@ -164,6 +164,45 @@ class EntitlementManager(models.Manager):
 
         return ActivationResult.SUCCESS, activated_entitlement
 
+    @sync_to_async
+    def count_entitlements(self, user, filters):
+        user_entitlements = self.filter(
+            account=user,
+            isGameEntitlement=False,
+        )
+
+        for filterName in filters:
+            if filters[filterName] is None:
+                continue
+
+            filterValue = filters[filterName]
+
+            match filterName:
+                case "entitlementId":
+                    user_entitlements = user_entitlements.filter(id=filterValue)
+                case "entitlementTag":
+                    user_entitlements = user_entitlements.filter(tag=filterValue)
+                case "groupName":
+                    user_entitlements = user_entitlements.filter(groupName=filterValue)
+                case "productId":
+                    user_entitlements = user_entitlements.filter(productId=filterValue)
+                case "grantStartDate":
+                    user_entitlements = user_entitlements.filter(
+                        grantDate__gte=filterValue
+                    )
+                case "grantEndDate":
+                    user_entitlements = user_entitlements.filter(
+                        grantDate__lte=filterValue
+                    )
+                case "projectId":
+                    user_entitlements = user_entitlements.filter(projectId=filterValue)
+
+        return user_entitlements.count()
+
+    @sync_to_async
+    def add_entitlement(self, user, **kwargs):
+        return self.create(account=user, **kwargs)
+
 
 class PersonaManager(models.Manager):
     @sync_to_async
