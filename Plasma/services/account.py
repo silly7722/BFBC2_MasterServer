@@ -80,12 +80,37 @@ class AccountService(Service):
         self.resolver_map[TXN.NuDisablePersona] = self.__handle_disable_persona
         self.resolver_map[TXN.GetCountryList] = self.__handle_get_country_list
         self.resolver_map[TXN.NuGetTos] = self.__handle_get_tos
+        self.resolver_map[
+            TXN.NuCreateEncryptedToken
+        ] = self.__handle_create_encrypted_token
+        self.resolver_map[TXN.NuSuggestPersonas] = self.__handle_suggest_personas
         self.resolver_map[TXN.NuLoginPersona] = self.__handle_login_persona
+        self.resolver_map[TXN.NuUpdatePassword] = self.__handle_update_password
+        self.resolver_map[TXN.NuGetAccount] = self.__handle_get_account
+        self.resolver_map[TXN.NuGetAccountByNuid] = self.__handle_get_account_by_nuid
+        self.resolver_map[
+            TXN.NuGetAccountByPS3Ticket
+        ] = self.__handle_get_account_by_ps3_ticket
         self.resolver_map[TXN.NuGetPersonas] = self.__handle_get_personas
+        self.resolver_map[TXN.NuUpdateAccount] = self.__handle_update_account
+        self.resolver_map[TXN.GameSpyPreAuth] = self.__handle_gamespy_preauth
+        self.resolver_map[TXN.NuXBL360Login] = self.__handle_xbl360_login
+        self.resolver_map[TXN.NuXBL360AddAccount] = self.__handle_xbl360_add_account
+        self.resolver_map[TXN.NuPS3Login] = self.__handle_ps3_login
+        self.resolver_map[TXN.NuPS3AddAccount] = self.__handle_ps3_add_account
+        self.resolver_map[
+            TXN.TransactionException
+        ] = self.__handle_transaction_exception
+        self.resolver_map[TXN.NuLookupUserInfo] = self.__handle_lookup_user_info
+        self.resolver_map[TXN.NuSearchOwners] = self.__handle_search_owners
         self.resolver_map[TXN.GetTelemetryToken] = self.__handle_get_telemetry_token
         self.resolver_map[TXN.NuGetEntitlements] = self.__handle_get_entitlements
+        self.resolver_map[
+            TXN.NuGetEntitlementCount
+        ] = self.__handle_get_entitlement_count
         self.resolver_map[TXN.NuEntitleGame] = self.__handle_entitle_game
         self.resolver_map[TXN.NuEntitleUser] = self.__handle_entitle_user
+        self.resolver_map[TXN.NuGrantEntitlement] = self.__handle_grant_entitlement
         self.resolver_map[TXN.GetLockerURL] = self.__handle_get_locker_url
 
     def _get_resolver(self, txn):
@@ -491,6 +516,63 @@ class AccountService(Service):
 
         return response
 
+    async def __handle_create_encrypted_token(self, data):
+        """Create an encrypted token (?)"""
+
+        # Is this ever called from the client?
+
+        # Transaction content is:
+        # {
+        #    "TXN": "NuCreateEncryptedToken",
+        #    "expires": integer,
+        #    "attributes": [
+        #        {
+        #           "name": string,
+        #           "value": string
+        #        }
+        #     ]
+        # }
+
+        # Couldn't find any response for this transaction in my poor RE effort
+        raise NotImplementedError("NuCreateEncryptedToken is not implemented")
+
+    async def __handle_suggest_personas(self, data):
+        """Suggest personas"""
+
+        # Is this ever called from the client?
+
+        # Transaction content is:
+        # {
+        #    "TXN": "NuSuggestPersonas",
+        #    "name": string
+        #    "maxSuggestions": integer
+        #    "keywords": [strings array]
+        # }
+        #
+        # Response is:
+        # {
+        #    "TXN": "NuSuggestPersonas",
+        #    "names": [strings array]
+        # }
+
+        # Not sure what "name" is here, but let's say it's the currently logged persona name
+        user = await get_user(self.connection.scope)
+
+        keywords = data.Get("keywords")
+        max_suggestions = data.Get("maxSuggestions")
+
+        if not keywords or not max_suggestions:
+            return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
+
+        personas = await Persona.objects.suggest_personas(
+            user, keywords, max_suggestions
+        )
+
+        response = Packet()
+        response.Set("names", personas)
+
+        return response
+
     async def __handle_login_persona(self, data):
         """Login a persona"""
 
@@ -537,6 +619,311 @@ class AccountService(Service):
 
         return response
 
+    async def __handle_update_password(self, data):
+        """Update a user's password"""
+
+        user = await get_user(self.connection.scope)
+
+        data.Set("nuid", user.nuid)  # Add nuid so we can test login
+        new_password = data.Get("newPassword")
+
+        login_data = await self.__internal_login(data)
+
+        if isinstance(login_data, TransactionError):
+            return login_data
+
+        try:
+            validate_password(new_password)
+        except ValidationError as e:
+            self.connection.logger.error(f"-- Not a valid password. ({e})")
+
+            errContainer = [
+                {
+                    "fieldName": "password",
+                    "fieldError": 6,
+                    "value": "INVALID_VALUE",
+                }
+            ]
+
+            return TransactionError(
+                TransactionError.Code.PARAMETERS_ERROR, errContainer
+            )
+
+        user.set_password(new_password)
+        data.Set("password", new_password)  # Overwrite password with new password
+
+        login_data = await self.__internal_login(data)
+
+        if isinstance(login_data, TransactionError):
+            return login_data
+
+        user, _, encryptedLoginInfo = login_data
+
+        response = Packet()
+
+        if encryptedLoginInfo:
+            response.Set("encryptedLoginInfo", encryptedLoginInfo)
+
+        return response
+
+    async def __handle_get_account(self, data, nuid=None):
+        """Get a user's account information"""
+
+        if nuid is None:
+            user = await get_user(self.connection.scope)
+        else:
+            umodel = get_user_model()
+            user = await umodel.objects.get_user_by_nuid(nuid)
+
+        response = Packet()
+        response.Set("nuid", user.nuid)
+
+        if user.parentalEmail:
+            response.Set("parentalEmail", user.parentalEmail)
+
+        if user.firstName:
+            response.Set("firstName", user.firstName)
+
+        if user.lastName:
+            response.Set("lastName", user.lastName)
+
+        if user.address:
+            response.Set("street", user.address)
+
+        if user.address2:
+            response.Set("street2", user.address2)
+
+        if user.city:
+            response.Set("city", user.city)
+
+        if user.state:
+            response.Set("state", user.state)
+
+        if user.zipCode:
+            response.Set("zip", user.zipCode)
+
+        if user.country:
+            response.Set("country", user.country)
+
+        if user.language:
+            response.Set("language", user.language)
+
+        if user.gender:
+            response.Set("gender", user.gender)
+
+        response.Set("userId", user.id)
+
+        if user.dateOfBirth:
+            response.Set("dOBMonth", user.dateOfBirth.month)
+            response.Set("dOBDay", user.dateOfBirth.day)
+            response.Set("dOBYear", user.dateOfBirth.year)
+
+        response.Set("globalCommOptin", user.globalOptin)
+        response.Set("thirdPartyMailFlag", user.thirdPartyOptin)
+
+        return response
+
+    async def __handle_get_account_by_nuid(self, data):
+        """Get a user's account information by nuid"""
+
+        nuid = data.Get("nuid")
+
+        if not nuid:
+            return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
+
+        # Should we allow to get account info of other users? This seems what this transaction is supposed to do
+        # But it looks like security risk to me, so if nuid is not equal to current user's nuid, we return error
+        # Else, we return account info of current user
+
+        user = await get_user(self.connection.scope)
+
+        if nuid != user.nuid:
+            return TransactionError(TransactionError.Code.TRANSACTION_DATA_NOT_FOUND)
+
+        return await self.__handle_get_account(data, nuid)
+
+    async def __handle_get_account_by_ps3_ticket(self, data):
+        """Get a user's account information by ps3 ticket"""
+
+        # {
+        #     "ticket": binary data,
+        # }
+
+        return NotImplementedError(
+            "NuGetAccountByPs3Ticket is PS3 specific transaction, it's not supported by this server implementation"
+        )
+
+    async def __handle_get_personas(self, data):
+        """Get the list of personas"""
+
+        user = await get_user(self.connection.scope)
+        personas = await Persona.objects.list_personas(user)
+
+        response = Packet()
+        response.Set("personas", personas)
+
+        return response
+
+    async def __handle_update_account(self, data):
+        """Update a user's account information"""
+
+        user = await get_user(self.connection.scope)
+
+        nuid = data.Get("nuid")
+        password = data.Get("password")
+        globalOptin = data.Get("globalOptin")
+        thirdPartyOptin = data.Get("thirdPartyOptin")
+
+        if (
+            nuid is None
+            or password is None
+            or globalOptin is None
+            or thirdPartyOptin is None
+        ):
+            return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
+
+        user.nuid = nuid
+        user.set_password(password)
+        user.globalOptin = globalOptin
+        user.thirdPartyOptin = thirdPartyOptin
+
+        if data.Get("parentalEmail"):
+            user.parentalEmail = data.Get("parentalEmail")
+
+        if data.Get("DOBDay"):
+            user.dateOfBirth = date(
+                data.Get("DOBYear"), data.Get("DOBMonth"), data.Get("DOBDay")
+            )
+
+        if data.Get("first_Name"):
+            user.firstName = data.Get("first_Name")
+
+        if data.Get("last_Name"):
+            user.lastName = data.Get("last_Name")
+
+        if data.Get("gender"):
+            user.gender = data.Get("gender")
+
+        if data.Get("street"):
+            user.address = data.Get("street")
+
+        if data.Get("street2"):
+            user.address2 = data.Get("street2")
+
+        if data.Get("city"):
+            user.city = data.Get("city")
+
+        if data.Get("state"):
+            user.state = data.Get("state")
+
+        if data.Get("zipCode"):
+            user.zipCode = data.Get("zipCode")
+
+        if data.Get("country"):
+            user.country = data.Get("country")
+
+        if data.Get("language"):
+            user.language = data.Get("language")
+
+        await user.save()
+        return Packet()
+
+    async def __handle_gamespy_preauth(self, data):
+        """Gamespy preauth"""
+
+        # {}
+
+        raise NotImplementedError(
+            "NuGamespyPreauth is Gamespy specific transaction, it's not supported by this server implementation"
+        )
+
+    async def __handle_xbl360_login(self, data):
+        """Xbox (Live) 360 login"""
+
+        # {
+        #    "macAddr": string,
+        #    "consoleId": "012345678", # Seems to be set to "012345678" in all requests, at least in server code
+        # }
+        # Optional "tosVersion" parameter (same as in NuLogin)
+
+        raise NotImplementedError(
+            "NuXbl360Login is Xbox 360 specific transaction, it's not supported by this server implementation"
+        )
+
+    async def __handle_xbl360_add_account(self, data):
+        """Xbox (Live) 360 add account"""
+
+        # Seems to be identical to NuAddAccount
+        return await self.__handle_add_account(data)
+
+    async def __handle_ps3_login(self, data):
+        """Playstation 3 login"""
+
+        # {
+        #     "ticket": binary data,
+        #     "macAddr": string,
+        #     "consoleId": "012345678", # Seems to be set to "012345678" in all requests, at least in server code
+        # }
+        # Optional "tosVersion" parameter (same as in NuLogin)
+
+        raise NotImplementedError(
+            "NuPs3Login is PS3 specific transaction, it's not supported by this server implementation"
+        )
+
+    async def __handle_ps3_add_account(self, data):
+        """Playstation 3 add account"""
+
+        # Seems to be identical to NuAddAccount
+        return await self.__handle_add_account(data)
+
+    async def __handle_transaction_exception(self, data):
+        """Transaction exception"""
+
+        raise NotImplementedError(
+            "TransactionException is not supported by this server implementation"
+        )
+
+    async def __handle_lookup_user_info(self, data):
+        """Lookup user info"""
+
+        users_to_lookup = data.Get("userInfo")
+
+        if not users_to_lookup:
+            return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
+
+        users_info = []
+
+        for name in users_to_lookup:
+            user_info = await Persona.objects.get_user_info(name)
+
+            if not user_info:
+                raise TransactionError(TransactionError.Code.TRANSACTION_DATA_NOT_FOUND)
+
+            users_info.append(user_info)
+
+        response = Packet()
+        response.Set("userInfo", users_info)
+
+        return response
+
+    async def __handle_search_owners(self, data):
+        """Friend search"""
+
+        user = await get_user(self.connection.scope)
+
+        screenName = data.Get("screenName")
+
+        if not screenName:
+            return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
+
+        owners = await Persona.objects.search_personas(user, screenName)
+
+        response = Packet()
+        response.Set("users", owners)
+        response.Set("nameSpaceId", "battlefield")
+
+        return response
+
     async def __handle_get_telemetry_token(self, data):
         """Get telemetry token"""
         token = "0.0.0.0,9946,"
@@ -567,17 +954,6 @@ class AccountService(Service):
 
         return response
 
-    async def __handle_get_personas(self, data):
-        """Get the list of personas"""
-
-        user = await get_user(self.connection.scope)
-        personas = await Persona.objects.list_personas(user)
-
-        response = Packet()
-        response.Set("personas", personas)
-
-        return response
-
     async def __handle_get_entitlements(self, data):
         """Get the list of entitlements"""
 
@@ -588,6 +964,35 @@ class AccountService(Service):
 
         response = Packet()
         response.Set("entitlements", entitlements)
+
+        return response
+
+    async def __handle_get_entitlement_count(self, data):
+        """Get the count of entitlements"""
+
+        user = await get_user(self.connection.scope)
+
+        filter_data = {
+            "entitlementId": data.Get("entitlementId"),
+            "entitlementTag": data.Get("entitlementTag"),
+            "masterUserId": data.Get("masterUserId"),
+            "userId": data.Get("userId"),
+            "global": data.Get("global"),
+            "status": data.Get("status"),
+            "groupName": data.Get("groupName"),
+            "productCatalog": data.Get("productCatalog"),
+            "productId": data.Get("productId"),
+            "grantStartDate": data.Get("grantStartDate"),
+            "grantEndDate": data.Get("grantEndDate"),
+            "projectId": data.Get("projectId"),
+            "entitlementType": data.Get("entitlementType"),
+            "devicePhysicalId": data.Get("devicePhysicalId"),
+        }
+
+        count = await Entitlement.objects.count_entitlements(user, filter_data)
+
+        response = Packet()
+        response.Set("entitlementCount", count)
 
         return response
 
@@ -639,6 +1044,43 @@ class AccountService(Service):
         response.Set("productList", activated_products)
 
         return response
+
+    async def __handle_grant_entitlement(self, data):
+        """Grant entitlement"""
+
+        # Is this ever called from client?
+
+        # Input (all optional):
+        # {
+        #     "entitlementTag": "string",
+        #     "groupName": "string",
+        #     "productCatalog": "string",
+        #     "productId": "string",
+        #     "grantStartDate": "string",
+        #     "grantEndDate": "string",
+        #     "entitlementType": "string",
+        #     "devicePhysicalId": "string",
+        #     "deviceType": "string",
+        #     "gamerTag": "string",
+        #     "masterId": "string",
+        #     "personaId": "string",
+        # }
+
+        if self.connection.clientType != ClientType.SERVER:
+            return TransactionError(TransactionError.Code.SESSION_NOT_AUTHORIZED)
+
+        user = await get_user(self.connection.scope)
+
+        entitlement = await Entitlement.objects.add_entitlement(
+            user,
+            tag=data.Get("entitlementTag"),
+            grantDate=data.Get("grantStartDate"),
+            terminationDate=data.Get("grantEndDate"),
+            groupName=data.Get("groupName"),
+            productId=data.Get("productId"),
+        )
+
+        return Packet()
 
     async def __handle_get_locker_url(self, data):
         """Get locker URL"""
