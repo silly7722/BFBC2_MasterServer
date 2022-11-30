@@ -250,3 +250,17 @@ class PersonaManager(models.Manager):
             :max_results
         ].exclude(account=account)
         return [persona.name for persona in filtered_personas]
+
+    @sync_to_async
+    def get_user_info(self, name):
+        persona = self.filter(name=name).first()
+
+        if persona is None:
+            return None
+
+        return {
+            "userName": persona.name,
+            "namespace": "battlefield",
+            "userId": persona.id,
+            "masterUserId": persona.account.id,
+        }
