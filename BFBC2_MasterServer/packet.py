@@ -106,6 +106,8 @@ class Packet:
                     # Create new dictionary in arrays_to_parse, so we will skip processing keys that are part of this list
                     arrays_to_parse[key] = []
 
+                del data_to_parse[i]
+
             i += 1
 
         for key, value in data_to_parse:
