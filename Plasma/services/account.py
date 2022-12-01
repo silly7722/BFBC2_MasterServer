@@ -1071,7 +1071,7 @@ class AccountService(Service):
 
         user = await get_user(self.connection.scope)
 
-        entitlement = await Entitlement.objects.add_entitlement(
+        await Entitlement.objects.add_entitlement(
             user,
             tag=data.Get("entitlementTag"),
             grantDate=data.Get("grantStartDate"),
