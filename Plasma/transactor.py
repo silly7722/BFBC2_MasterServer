@@ -7,6 +7,7 @@ from BFBC2_MasterServer.packet import HEADER_LENGTH, Packet
 from Plasma.error import TransactionError, TransactionException, TransactionSkip
 from Plasma.services.account import TXN as AccountTXN
 from Plasma.services.account import AccountService
+from Plasma.services.association import AssociationService
 from Plasma.services.connect import TXN as ConnectTXN
 from Plasma.services.connect import ConnectService
 
@@ -14,6 +15,7 @@ from Plasma.services.connect import ConnectService
 class TransactionService(Enum):
     ConnectService = "fsys"
     AccountService = "acct"
+    AssociationService = "asso"
 
 
 class TransactionKind(Enum):
@@ -49,6 +51,9 @@ class Transactor:
         # Init services
         self.services[TransactionService.ConnectService] = ConnectService(connection)
         self.services[TransactionService.AccountService] = AccountService(connection)
+        self.services[TransactionService.AssociationService] = AssociationService(
+            connection
+        )
 
     async def get_response(self, service, message):
         """Get response from a transaction"""
