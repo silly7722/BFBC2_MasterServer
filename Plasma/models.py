@@ -219,3 +219,34 @@ class Persona(models.Model):
         verbose_name = "Persona"
         verbose_name_plural = "Personas"
         ordering = ("id",)
+
+
+class Assocation(models.Model):
+    owner = models.ForeignKey(Persona, on_delete=models.CASCADE)
+
+    class AssociationType(models.IntegerChoices):
+        MUTE = 0
+        BLOCK = 1
+        FRIENDS = 2
+        RECENT_PLAYERS = 3
+
+    type = models.IntegerField(default=-1, choices=AssociationType.choices)
+    members = models.ManyToManyField(
+        Persona, related_name="association_members", through="AssociationMember"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Association"
+        verbose_name_plural = "Associations"
+        ordering = ("id",)
+
+
+class AssociationMember(models.Model):
+    persona = models.ForeignKey(Persona, on_delete=models.CASCADE)
+    target = models.ForeignKey(Assocation, on_delete=models.CASCADE)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
