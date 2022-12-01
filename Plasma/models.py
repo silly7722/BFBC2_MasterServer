@@ -1,7 +1,12 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 
-from Plasma.managers import EntitlementManager, PersonaManager, UserManager
+from Plasma.managers import (
+    AssocationManager,
+    EntitlementManager,
+    PersonaManager,
+    UserManager,
+)
 
 
 # Create your models here.
@@ -237,6 +242,8 @@ class Assocation(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = AssocationManager()
 
     class Meta:
         verbose_name = "Association"

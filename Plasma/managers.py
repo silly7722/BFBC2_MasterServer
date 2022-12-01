@@ -264,3 +264,36 @@ class PersonaManager(models.Manager):
             "userId": persona.id,
             "masterUserId": persona.account.id,
         }
+
+
+class AssocationManager(models.Manager):
+    @sync_to_async
+    def get_user_assocations(self, persona, type):
+        asso_usr, created = self.get_or_create(owner=persona, type=type)
+
+        if created:
+            asso_usr.save()
+
+        return asso_usr
+
+    @sync_to_async
+    def add_assocation(self, usrAssocations, target_id):
+        from Plasma.models import Persona
+
+        try:
+            target_persona = Persona.objects.get(id=target_id)
+        except Persona.DoesNotExist:
+            return False
+
+        usrAssocations.members.add(target_persona)
+        usrAssocations.save()
+
+        assocation = usrAssocations.association_member_set.get(target=target_persona)
+
+        return {
+            "id": assocation.id,
+            "name": assocation.name,
+            "type": 1,
+            "created": assocation.created_at,
+            "modified": assocation.modified_at,
+        }
