@@ -41,4 +41,4 @@ RUN adduser -u 5678 --disabled-password --gecos "" bfbc2emu && chown -R bfbc2emu
 USER bfbc2emu
 
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["python", "manage.py", "runserver"]
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "BFBC2_MasterServer.asgi:application"]
