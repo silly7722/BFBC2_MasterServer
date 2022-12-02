@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "channels",
     "Plasma",
+    "Theater",
+    "easo",
 ]
 
 MIDDLEWARE = [
@@ -165,15 +167,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "easo/"
+
+STATICFILES_DIRS = [("editorial/BF/2010/BFBC2/config/PC", f"{BASE_DIR}/easo/static")]
+
+# Add text/plain as a known mimetype for files with no extension
+mimetypes.add_type("text/plain", "", True)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# Add text/plain as a known mimetype for files with no extension
-mimetypes.add_type("text/plain", "", True)
 
 # Logging
 # https://docs.djangoproject.com/en/4.1/ref/settings/#logging
@@ -222,3 +226,7 @@ LOGGING = {
 }
 
 AUTH_USER_MODEL = "Plasma.Account"
+
+# Whitenoise settings
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_MIMETYPES = {"": "text/plain"}
