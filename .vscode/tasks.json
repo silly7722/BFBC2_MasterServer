@@ -28,6 +28,12 @@
 				"image": "bfbc2emu",
 				"containerName": "bfbc2emu",
 				"network": "bfbc2_masterserver_default",
+				"ports": [
+					{
+						"containerPort": 8000,
+						"hostPort": 8000
+					}
+				],
 				"envFiles": [
 					"${workspaceFolder}/.env"
 				],
@@ -35,7 +41,7 @@
 					{
 						"localPath": "${workspaceFolder}",
 						"containerPath": "/app",
-					}
+					},
 				]
 			},
 			"python": {
