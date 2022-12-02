@@ -269,12 +269,23 @@ class PersonaManager(models.Manager):
 class AssocationManager(models.Manager):
     @sync_to_async
     def get_user_assocations(self, persona, type):
-        asso_usr, created = self.get_or_create(owner=persona, type=type)
+        usrAssocations, created = self.get_or_create(owner=persona, type=type)
 
         if created:
-            asso_usr.save()
+            usrAssocations.save()
 
-        return asso_usr
+        assocations = usrAssocations.associationmember_set.all()
+
+        return [
+            {
+                "id": assocation.id,
+                "name": assocation.name,
+                "type": 1,
+                "created": assocation.created_at,
+                "modified": assocation.modified_at,
+            }
+            for assocation in assocations
+        ]
 
     @sync_to_async
     def add_assocation(self, usrAssocations, target_id):
@@ -288,7 +299,29 @@ class AssocationManager(models.Manager):
         usrAssocations.members.add(target_persona)
         usrAssocations.save()
 
-        assocation = usrAssocations.association_member_set.get(target=target_persona)
+        assocation = usrAssocations.associationmember_set.get(target=target_persona)
+
+        return {
+            "id": assocation.id,
+            "name": assocation.name,
+            "type": 1,
+            "created": assocation.created_at,
+            "modified": assocation.modified_at,
+        }
+
+    @sync_to_async
+    def remove_assocation(self, usrAssocations, target_id):
+        from Plasma.models import Persona
+
+        try:
+            target_persona = Persona.objects.get(id=target_id)
+        except Persona.DoesNotExist:
+            return False
+
+        assocation = usrAssocations.associationmember_set.get(target=target_persona)
+
+        usrAssocations.members.remove(target_persona)
+        usrAssocations.save()
 
         return {
             "id": assocation.id,
