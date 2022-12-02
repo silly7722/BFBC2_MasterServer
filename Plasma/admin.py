@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from Plasma.models import Account, Entitlement, Persona, SerialKey
+from Plasma.models import Account, Assocation, Entitlement, Persona, SerialKey
 
 # Register your models here.
 
@@ -146,7 +146,24 @@ class PersonaAdmin(admin.ModelAdmin):
     )
 
 
+class AssocationAdmin(admin.ModelAdmin):
+    list_display = [
+        "id",
+        "owner",
+        "type",
+        "assocations",
+    ]
+    list_filter = (
+        "owner",
+        "type",
+    )
+
+    def assocations(self, obj):
+        return [",".join([member for member in obj.associationmember_set.all()])]
+
+
 admin.site.register(Account, AccountAdmin)
 admin.site.register(Entitlement, EntitlementAdmin)
 admin.site.register(SerialKey, SerialKeyAdmin)
 admin.site.register(Persona, PersonaAdmin)
+admin.site.register(Assocation, AssocationAdmin)
