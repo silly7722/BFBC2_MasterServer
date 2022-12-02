@@ -10,12 +10,15 @@ from Plasma.services.association import TXN as AssocationTXN
 from Plasma.services.association import AssociationService
 from Plasma.services.connect import TXN as ConnectTXN
 from Plasma.services.connect import ConnectService
+from Plasma.services.message import TXN as MessageTXN
+from Plasma.services.message import ExtensibleMessageService
 
 
 class TransactionService(Enum):
     ConnectService = "fsys"
     AccountService = "acct"
     AssociationService = "asso"
+    ExtensibleMessageService = "xmsg"
 
 
 class TransactionKind(Enum):
@@ -35,6 +38,8 @@ class Transactor:
         ConnectTXN.MemCheck.value,
         ConnectTXN.Ping.value,
         AssocationTXN.NotifyAssociationUpdate.value,
+        MessageTXN.AsyncMessageEvent.value,
+        MessageTXN.AsyncPurgedEvent.value,
     ]
     allowed_transactions_without_auth = [
         # All transactions from ConnectService are allowed without auth (not included in this list)
@@ -55,6 +60,9 @@ class Transactor:
         self.services[TransactionService.AssociationService] = AssociationService(
             connection
         )
+        self.services[
+            TransactionService.ExtensibleMessageService
+        ] = ExtensibleMessageService(connection)
 
     async def get_response(self, service, message):
         """Get response from a transaction"""
