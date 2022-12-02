@@ -22,9 +22,17 @@ class AssociationService(Service):
     def __init__(self, connection) -> None:
         super().__init__(connection)
 
+        self.creator_map[
+            TXN.NotifyAssociationUpdate
+        ] = self.__create_notify_association_update
+
         self.resolver_map[TXN.AddAssociations] = self.__handle_add_associations
         self.resolver_map[TXN.DeleteAssociations] = self.__handle_delete_associations
         self.resolver_map[TXN.GetAssociations] = self.__handle_get_associations
+        self.resolver_map[TXN.GetAssociationCount] = self.__handle_get_association_count
+        self.resolver_map[
+            TXN.NotifyAssociationUpdate
+        ] = self.__handle_notify_association_update
 
     def _get_resolver(self, txn):
         return self.resolver_map[TXN(txn)]
@@ -222,3 +230,71 @@ class AssociationService(Service):
         response.Set("type", data.Get("type"))
 
         return response
+
+    async def __handle_get_association_count(self, data):
+        """Get the number of associations between two objects."""
+
+        domainPartition = data.Get("domainPartition")
+        assoType = self.__get_assocation_type(data.Get("type"))
+
+        if not assoType:
+            return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
+
+        assocationMembers = await Assocation.objects.get_user_assocations(
+            self.connection.loggedPersona, assoType
+        )
+
+        maxAssocations = 20 if assoType != AssociationType.RECENT_PLAYERS else 100
+
+        owner = {
+            "id": self.connection.loggedPersona.id,
+            "name": self.connection.loggedPersona.name,
+            "type": 1,
+        }
+
+        response = Packet()
+        response.Set("domainPartition", domainPartition)
+        response.Set("maxListSize", maxAssocations)
+        response.Set("count", len(assocationMembers))
+        response.Set("owner", owner)
+
+        return response
+
+    async def __handle_notify_association_update(self, data):
+        """Notify the client that an association has been updated."""
+
+        # Is this even called by the game?
+
+        return NotImplementedError(
+            "NotifyAssociationUpdate packet handler is not implemented."
+        )
+
+    async def __create_notify_association_update(self, data):
+        """Create a notify association update packet."""
+
+        # Is this even used?
+
+        # {
+        #     "type": string,
+        #     "domainPartition": {
+        #        "domain": string,
+        #        "subDomain": string
+        #        "Key": string
+        #    },
+        #    "entity": {
+        #       "id": int,
+        #       "type": int,
+        #       "name": string,
+        #     },
+        #     "member": {
+        #        "created": datetime,
+        #        "modified": datetime,
+        #     },
+        #     "listSize": int,
+        #     "mutual": int,
+        #     "operation": "add" or "del"
+        # }
+
+        raise NotImplementedError(
+            "NotifyAssociationUpdate packet creation is not implemented."
+        )

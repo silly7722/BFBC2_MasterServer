@@ -3,10 +3,10 @@ from base64 import b64decode, b64encode
 from enum import Enum
 
 from BFBC2_MasterServer.packet import HEADER_LENGTH, Packet
-
 from Plasma.error import TransactionError, TransactionException, TransactionSkip
 from Plasma.services.account import TXN as AccountTXN
 from Plasma.services.account import AccountService
+from Plasma.services.association import TXN as AssocationTXN
 from Plasma.services.association import AssociationService
 from Plasma.services.connect import TXN as ConnectTXN
 from Plasma.services.connect import ConnectService
@@ -34,6 +34,7 @@ class Transactor:
     allowed_unscheduled_transactions = [
         ConnectTXN.MemCheck.value,
         ConnectTXN.Ping.value,
+        AssocationTXN.NotifyAssociationUpdate.value,
     ]
     allowed_transactions_without_auth = [
         # All transactions from ConnectService are allowed without auth (not included in this list)
