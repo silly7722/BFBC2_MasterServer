@@ -1,11 +1,13 @@
 from enum import Enum
 
+from asgiref.sync import sync_to_async
+from channels.auth import database_sync_to_async, get_user
+
 from BFBC2_MasterServer.packet import Packet
 from BFBC2_MasterServer.service import Service
-from channels.auth import database_sync_to_async, get_user
 from Plasma.enumerators.ListFullBehavior import ListFullBehavior
 from Plasma.error import TransactionError
-from Plasma.models import Assocation
+from Plasma.models import Assocation, AssociationType
 
 
 class TXN(Enum):
@@ -21,6 +23,8 @@ class AssociationService(Service):
         super().__init__(connection)
 
         self.resolver_map[TXN.AddAssociations] = self.__handle_add_associations
+        self.resolver_map[TXN.DeleteAssociations] = self.__handle_delete_associations
+        self.resolver_map[TXN.GetAssociations] = self.__handle_get_associations
 
     def _get_resolver(self, txn):
         return self.resolver_map[TXN(txn)]
@@ -89,10 +93,12 @@ class AssociationService(Service):
                 assoUsr, addRequest["member"]["id"]
             )
 
+            assocations = await Assocation.objects.get_user_assocations(
+                self.connection.loggedPersona, assoType
+            )
+
             if not member:
-                return TransactionError(
-                    TransactionError.Code.TRANSACTION_DATA_NOT_FOUND
-                )
+                outcome = 23005
 
             owner = {
                 "id": self.connection.loggedPersona.id,
@@ -105,7 +111,106 @@ class AssociationService(Service):
                 "owner": owner,
                 "mutual": 0 if assoType == AssociationType.RECENT_PLAYERS else 1,
                 "outcome": outcome,
-                "listSize": maxAssocations,
+                "listSize": len(assocations.members),
+            }
+
+            result.append(resultFinal)
+
+        response = Packet()
+        response.Set("domainPartition", domainPartition)
+        response.Set("maxListSize", maxAssocations)
+        response.Set("results", result)
+        response.Set("type", data.Get("type"))
+
+        return response
+
+    async def __handle_delete_associations(self, data):
+        """Delete associations between two objects."""
+
+        domainPartition = data.Get("domainPartition")
+        assoType = self.__get_assocation_type(data.Get("type"))
+
+        if not assoType:
+            return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
+
+        assoUsr = await Assocation.objects.get_user_assocations(
+            self.connection.loggedPersona, assoType
+        )
+
+        deleteRequests = data.Get("deleteRequests")
+        maxAssocations = 20 if assoType != AssociationType.RECENT_PLAYERS else 100
+
+        result = []
+
+        for deleteRequest in deleteRequests:
+            outcome = 0
+
+            # Remove member
+            member = await Assocation.objects.remove_assocation(
+                assoUsr, deleteRequest["member"]["id"]
+            )
+
+            assocations = await Assocation.objects.get_user_assocations(
+                self.connection.loggedPersona, assoType
+            )
+
+            if not member:
+                outcome = 23005
+
+            owner = {
+                "id": self.connection.loggedPersona.id,
+                "name": self.connection.loggedPersona.name,
+                "type": 1,
+            }
+
+            resultFinal = {
+                "member": member,
+                "owner": owner,
+                "mutual": 0 if assoType == AssociationType.RECENT_PLAYERS else 1,
+                "outcome": outcome,
+                "listSize": len(assocations.members),
+            }
+
+            result.append(resultFinal)
+
+        response = Packet()
+        response.Set("domainPartition", domainPartition)
+        response.Set("maxListSize", maxAssocations)
+        response.Set("results", result)
+        response.Set("type", data.Get("type"))
+
+        return response
+
+    async def __handle_get_associations(self, data):
+        """Get associations between two objects."""
+
+        domainPartition = data.Get("domainPartition")
+        assoType = self.__get_assocation_type(data.Get("type"))
+
+        if not assoType:
+            return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
+
+        assocationMembers = await Assocation.objects.get_user_assocations(
+            self.connection.loggedPersona, assoType
+        )
+
+        maxAssocations = 20 if assoType != AssociationType.RECENT_PLAYERS else 100
+
+        result = []
+
+        for member in assocationMembers:
+            owner = {
+                "id": self.connection.loggedPersona.id,
+                "name": self.connection.loggedPersona.name,
+                "type": 1,
+            }
+
+            resultFinal = {
+                "member": member,
+                "owner": owner,
+                "mutual": 0 if assoType == AssociationType.RECENT_PLAYERS else 1,
+                "outcome": 0,
+                "listSize": len(assocationMembers),
             }
 
             result.append(resultFinal)
