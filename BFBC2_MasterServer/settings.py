@@ -167,9 +167,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = "easo/"
+STATIC_URL = "static/"
 
-STATICFILES_DIRS = [("editorial/BF/2010/BFBC2/config/PC", f"{BASE_DIR}/easo/static")]
+STATICFILES_DIRS = [
+    ("../easo/editorial/BF/2010/BFBC2/config/PC", f"{BASE_DIR}/easo/static")
+]
 
 # Add text/plain as a known mimetype for files with no extension
 mimetypes.add_type("text/plain", "", True)
