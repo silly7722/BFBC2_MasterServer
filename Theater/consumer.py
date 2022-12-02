@@ -1,6 +1,6 @@
-from BFBC2_MasterServer.consumer import BFBC2Consumer
 from packaging import version
 
+from BFBC2_MasterServer.consumer import BFBC2Consumer
 from Theater.transactor import Transactor
 
 
@@ -49,8 +49,10 @@ class TheaterConsumer(BFBC2Consumer):
                 text_data=f"WARNING: Your protocol version ({self.prot}) is not officially supported by this server emulator, some features may not work properly. Please install latest supported game version by this server emulator (Which is 795745)"
             )
 
-        if self.vers != version.parse("1.0") or self.vers != version.parse("2.0"):
+        if self.vers == version.parse("1.0") or self.vers == version.parse("2.0"):
             # 1.0 - Client, 2.0 - Server
+            pass
+        else:
             self.logger.warning(
                 f"Game version {self.vers} is not officially supported by this server emulator!"
             )
