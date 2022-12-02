@@ -1,3 +1,4 @@
+import logging
 import re
 from datetime import datetime
 from enum import Enum
@@ -9,6 +10,8 @@ SERVICE_OFFSET, SERVICE_LENGTH = (0x0, 0x4)
 KIND_OFFSET, KIND_LENGTH = (SERVICE_OFFSET + SERVICE_LENGTH, 0x4)
 LENGTH_OFFSET, LENGTH_LENGTH = (KIND_OFFSET + KIND_LENGTH, 0x4)
 HEADER_LENGTH = 0xC
+
+logger = logging.getLogger("packet")
 
 
 class PacketParseException(Exception):
@@ -77,75 +80,52 @@ class Packet:
                 f"Packet length does not match (Received: {received_length}, Expected: {self.__length})"
             )
 
-        self.ParseTransactionData(raw_data[HEADER_LENGTH:].decode("utf-8").split("\n"))
-
-    def ParseTransactionData(self, transaction_data):
-        """Add transaction data to packet"""
+        transaction_data = raw_data[HEADER_LENGTH:].decode("utf-8").split("\n")
 
         # If transaction data is null terminated, remove null terminator before parsing
         if transaction_data[-1] == "\0":
             transaction_data = transaction_data[:-1]
 
-        data_to_parse = [data.split("=", 2) for data in transaction_data]
+        tokens = self.__make_key_value_pairs(transaction_data)
+        tree = {}
 
-        # transaction_data is a list of strings in the format of "key=value"
-        arrays_to_parse = {}
+        for key, value in tokens:
+            tree = self.__add_branch(tree, key.split("."), self.__parse_value(value))
 
-        # Sort transaction_data by keys (this is needed to parse lists)
-        transaction_data.sort(key=lambda x: x.split("=")[0])
+        self.ParseTransactionData(tree)
 
-        i = 0
-        for key, value in data_to_parse:
-            # Find all arrays
+    def __make_key_value_pairs(self, transaction_data):
+        """Make key value pairs from transaction data"""
+        return [data.split("=", 1) for data in transaction_data]
 
-            if key.endswith(".[]"):
-                # This is a list
-                key = key[:-3]
+    def __add_branch(self, tree, vector, value):
+        key = vector[0]
+        tree[key] = (
+            value
+            if len(vector) == 1
+            else self.__add_branch(tree[key] if key in tree else {}, vector[1:], value)
+        )
+        return tree
 
-                if key not in arrays_to_parse:
-                    # Create new dictionary in arrays_to_parse, so we will skip processing keys that are part of this list
-                    arrays_to_parse[key] = []
+    def ParseTransactionData(self, data):
+        """Parse transaction data into packet data"""
 
-                del data_to_parse[i]
+        for key, value in data.items():
+            if isinstance(value, dict) and "[]" in value:
+                length = value.pop("[]")
+                temp_array = []
 
-            i += 1
+                for item in value:
+                    temp_array.append(value[item])
 
-        for key, value in data_to_parse:
-            is_array_element = False
+                if length != len(temp_array):
+                    logger.warning(
+                        f"Array length does not match (Expected: {length}, Got: {len(temp_array)})"
+                    )
 
-            for array_key in arrays_to_parse:
-                if key.startswith(array_key):
-                    try:
-                        key_name, idx, subkey = key.split(
-                            ".", 2
-                        )  # Split key into array name and index
-                    except ValueError:
-                        key_name, idx = key.split(".")
-                        subkey = None
-
-                    if subkey:
-                        if len(arrays_to_parse[array_key]) <= int(idx):
-                            arrays_to_parse[array_key].append({})
-
-                        arrays_to_parse[key_name][int(idx)][
-                            subkey
-                        ] = self.__parse_value(value)
-                    else:
-                        if isinstance(arrays_to_parse[key_name], dict):
-                            arrays_to_parse[key_name] = []
-
-                        arrays_to_parse[key_name].append(self.__parse_value(value))
-
-                    is_array_element = True
-                    break
-
-            if is_array_element:
-                continue
-
-            self.Set(key, self.__parse_value(value))
-
-        for array in arrays_to_parse:
-            self.Set(array, arrays_to_parse[array])
+                self.Set(key, temp_array)
+            else:
+                self.Set(key, value)
 
     def __parse_value(self, value: str):
         """Parse value from string"""
