@@ -226,16 +226,18 @@ class Persona(models.Model):
         ordering = ("id",)
 
 
+class AssociationType(models.IntegerChoices):
+    UNKNOWN = 0
+    MUTE = 1
+    BLOCK = 2
+    FRIENDS = 3
+    RECENT_PLAYERS = 4
+
+
 class Assocation(models.Model):
     owner = models.ForeignKey(Persona, on_delete=models.CASCADE)
 
-    class AssociationType(models.IntegerChoices):
-        MUTE = 0
-        BLOCK = 1
-        FRIENDS = 2
-        RECENT_PLAYERS = 3
-
-    type = models.IntegerField(default=-1, choices=AssociationType.choices)
+    type = models.IntegerField(default=0, choices=AssociationType.choices)
     members = models.ManyToManyField(
         Persona, related_name="association_members", through="AssociationMember"
     )

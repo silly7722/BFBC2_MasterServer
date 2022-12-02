@@ -31,15 +31,15 @@ class AssociationService(Service):
     def __get_assocation_type(self, assoType):
         match assoType:
             case "PlasmaMute":
-                return Assocation.type.MUTE
+                return AssociationType.MUTE
             case "PlasmaBlock":
-                return Assocation.type.BLOCK
+                return AssociationType.BLOCK
             case "PlasmaFriends":
-                return Assocation.type.FRIENDS
+                return AssociationType.FRIENDS
             case "PlasmaRecentPlayers":
-                return Assocation.type.RECENT_PLAYERS
-            case _:
-                return None
+                return AssociationType.RECENT_PLAYERS
+
+        return None
 
     async def __handle_add_associations(self, data):
         """Add associations between two objects."""
@@ -62,7 +62,7 @@ class AssociationService(Service):
         assoUsr = await Assocation.objects.get_user_assocations(
             self.connection.loggedPersona, assoType
         )
-        maxAssocations = 20 if assoType != Assocation.type.RECENT_PLAYERS else 100
+        maxAssocations = 20 if assoType != AssociationType.RECENT_PLAYERS else 100
 
         result = []
 
@@ -103,7 +103,7 @@ class AssociationService(Service):
             resultFinal = {
                 "member": member,
                 "owner": owner,
-                "mutual": 0 if assoType == Assocation.type.RECENT_PLAYERS else 1,
+                "mutual": 0 if assoType == AssociationType.RECENT_PLAYERS else 1,
                 "outcome": outcome,
                 "listSize": maxAssocations,
             }
