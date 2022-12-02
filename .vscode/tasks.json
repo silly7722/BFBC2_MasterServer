@@ -1,0 +1,55 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "docker-compose-create",
+			"type": "shell",
+			"command": "docker compose up database redis -d",
+		},
+		{
+			"type": "docker-build",
+			"label": "docker-build",
+			"platform": "python",
+			"dockerBuild": {
+				"tag": "bfbc2emu:latest",
+				"dockerfile": "${workspaceFolder}/Dockerfile",
+				"context": "${workspaceFolder}",
+				"pull": true
+			}
+		},
+		{
+			"type": "docker-run",
+			"label": "docker-run",
+			"dependsOn": [
+				"docker-compose-create",
+				"docker-build"
+			],
+			"dockerRun": {
+				"image": "bfbc2emu",
+				"containerName": "bfbc2emu",
+				"network": "bfbc2_masterserver_default",
+				"envFiles": [
+					"${workspaceFolder}/.env"
+				],
+				"volumes": [
+					{
+						"localPath": "${workspaceFolder}",
+						"containerPath": "/app",
+					}
+				]
+			},
+			"python": {
+				"args": [
+					"runserver",
+					"0.0.0.0:8000",
+				],
+				"file": "manage.py"
+			}
+		},
+		{
+			"type": "shell",
+			"label": "docker-compose-stop",
+			"command": "docker compose stop database redis",
+		}
+	]
+}
