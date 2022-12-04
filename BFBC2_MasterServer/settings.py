@@ -12,27 +12,24 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 import mimetypes
 import os
-import random
-import string
 from distutils.util import strtobool
 from pathlib import Path
 
+from BFBC2_MasterServer.tools import get_config, get_secrets
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv(
-    "SECRET_KEY", "".join(random.choice(string.printable) for _ in range(50))
-)
+SECRET_KEY = get_secrets("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = strtobool(os.getenv("DEBUG", "False"))
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["*"] if DEBUG else get_config("ALLOWED_HOSTS", "").split(";")
 
 
 # Application definition
@@ -89,11 +86,11 @@ ASGI_APPLICATION = "BFBC2_MasterServer.asgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("POSTGRES_NAME"),
-        "USER": os.environ.get("POSTGRES_USER"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
-        "HOST": os.environ.get("POSTGRES_HOST", "database"),
-        "PORT": int(os.environ.get("POSTGRES_PORT", 5432)),
+        "NAME": get_config("POSTGRES_NAME"),
+        "USER": get_config("POSTGRES_USER"),
+        "PASSWORD": get_secrets("POSTGRES_PASSWORD"),
+        "HOST": get_config("POSTGRES_HOST", "database"),
+        "PORT": int(get_config("POSTGRES_PORT", 5432)),
     }
 }
 
@@ -108,7 +105,7 @@ SESSION_CACHE_ALIAS = "default"
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{os.environ.get('REDIS_HOST', 'redis')}:{os.environ.get('REDIS_PORT', '6379')}",
+        "LOCATION": f"redis://{get_config('REDIS_HOST', 'redis')}:{get_config('REDIS_PORT', '6379')}",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
@@ -124,8 +121,8 @@ CHANNEL_LAYERS = {
         "CONFIG": {
             "hosts": [
                 (
-                    os.environ.get("REDIS_HOST", "redis"),
-                    int(os.environ.get("REDIS_PORT", "6379")),
+                    get_config("REDIS_HOST", "redis"),
+                    int(get_config("REDIS_PORT", "6379")),
                 )
             ],
         },
@@ -232,3 +229,12 @@ AUTH_USER_MODEL = "Plasma.Account"
 # Whitenoise settings
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_MIMETYPES = {"": "text/plain"}
+
+# Security
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = -1
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
