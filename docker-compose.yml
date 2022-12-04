@@ -3,20 +3,77 @@ version: '3.9'
 services:
   database:
     image: postgres:alpine
-    env_file:
-      - .env
-
+    environment:
+      POSTGRES_USER_FILE: /run/configs/postgres_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB: /run/configs/postgres_db
+    configs:
+      - source: bfbc2emu_postgres_db
+        target: /run/configs/postgres_db
+      - source: bfbc2emu_postgres_user
+        target: /run/configs/postgres_user
+    secrets:
+      - source: bfbc2emu_postgres_password
+        target: /run/secrets/postgres_password
+    networks:
+      - internal
+  
   redis:
     image: redis:alpine
+    networks:
+      - internal
 
   app:
     build: .
-    volumes:
-      - .:/app
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
+    image: registry.grzyb.dev/emu/bfbc2:latest
+    restart: always
+    networks:
+      - internal
+      - public
     depends_on:
       - database
       - redis
+    configs:
+      - source: bfbc2emu_allowed_hosts
+        target: /run/configs/allowed_hosts
+      - source: bfbc2emu_postgres_db
+        target: /run/configs/postgres_db
+      - source: bfbc2emu_postgres_user
+        target: /run/configs/postgres_user
+    secrets:
+      - source: bfbc2emu_postgres_password
+        target: /run/secrets/postgres_password
+      - source: bfbc2emu_secret_key
+        target: /run/secrets/secret_key
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=public
+        - traefik.constraint-label=traefik-public
+        - traefik.http.routers.emu_bfbc2.rule=Host(`bfbc2.grzyb.dev`)
+        - traefik.http.routers.emu_bfbc2.entrypoints=https
+        - traefik.http.routers.emu_bfbc2.tls=true
+        - traefik.http.routers.emu_bfbc2.tls.certresolver=grzybnet
+        - traefik.http.services.emu_bfbc2.loadbalancer.server.port=8000
+      update_config:
+        order: start-first
+        failure_action: rollback
+
+networks:
+  internal:
+  public:
+    external: true
+
+configs:
+  bfbc2emu_allowed_hosts: 
+    external: true
+  bfbc2emu_postgres_db:
+    external: true
+  bfbc2emu_postgres_user:
+    external: true
+
+secrets:
+  bfbc2emu_postgres_password:
+    external: true
+  bfbc2emu_secret_key:
+    external: true
