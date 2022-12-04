@@ -6,3 +6,4 @@ channels_redis
 psycopg2
 email-validator
 whitenoise
+packaging
