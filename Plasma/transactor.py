@@ -101,22 +101,20 @@ class Transactor:
         if isinstance(service, str):
             service = TransactionService(service)
 
-        if isinstance(txn, str):
-            X = make_dataclass("X", [("value", str)])
-            txn = X(value=txn)
+        txnVal = txn if isinstance(txn, str) else txn.value
 
-        if txn.value not in self.allowed_unscheduled_transactions:
+        if txnVal not in self.allowed_unscheduled_transactions:
             raise TransactionException("Transaction not allowed to be unscheduled")
 
         # Unscheduled transactions are always "SimpleResponse" kind, and have no transaction ID
 
-        packet_to_send = await self.services[service].start_transaction(txn, data)
+        packet_to_send = await self.services[service].start_transaction(txnVal, data)
 
         if isinstance(packet_to_send, TransactionError):
             packet = Packet()
             packet.service = service.value
             packet.kind = TransactionKind.SimpleResponse.value
-            packet.Set("TXN", packet_to_send.Get("TXN"))
+            packet.Set("TXN", txnVal)
             packet.Set("errorCode", packet_to_send.errorCode)
             packet.Set("localizedMessage", packet_to_send.localizedMessage)
             packet.Set("errorContainer", packet_to_send.errorContainer)
@@ -125,7 +123,7 @@ class Transactor:
         else:
             packet_to_send.service = service.value
             packet_to_send.kind = TransactionKind.SimpleResponse.value
-            packet_to_send.Set("TXN", txn)
+            packet_to_send.Set("TXN", txnVal)
             await self.connection.send_packet(packet_to_send, 0)
 
     async def verify_transaction(self, message):
