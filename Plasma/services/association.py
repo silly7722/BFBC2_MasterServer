@@ -5,9 +5,10 @@ from channels.auth import database_sync_to_async, get_user
 
 from BFBC2_MasterServer.packet import Packet
 from BFBC2_MasterServer.service import Service
+from Plasma.enumerators.AssocationUpdateOperation import AssocationUpdateOperation
 from Plasma.enumerators.ListFullBehavior import ListFullBehavior
 from Plasma.error import TransactionError
-from Plasma.models import Assocation, AssociationType
+from Plasma.models import Assocation, AssociationType, Persona
 
 
 class TXN(Enum):
@@ -81,28 +82,45 @@ class AssociationService(Service):
         for addRequest in addRequests:
             outcome = 0
 
+            assoLen = await Assocation.objects.get_user_assocations_count(
+                self.connection.loggedPersona, assoType
+            )
+
             if listFullBehavior == ListFullBehavior.ReturnError:
-                if len(assoUsr.members) + 1 > maxAssocations:
+                if assoLen + 1 > maxAssocations:
                     outcome = 23005
             elif listFullBehavior == ListFullBehavior.RollLeastRecentlyModified:
-                if len(assoUsr.members) + 1 > maxAssocations:
-                    # Roll least recently modified
-                    members = await database_sync_to_async(assoUsr.members.all)()
-
+                if assoLen + 1 > maxAssocations:
                     # Order by oldest first
-                    members = sorted(members, key=lambda member: member.lastModified)
+                    members = sorted(members, key=lambda member: member.get("modified"))
                     oldestMember = members[0]
 
                     # Remove oldest member
-                    await database_sync_to_async(assoUsr.members.remove)(oldestMember)
+                    database_sync_to_async(assoUsr.members.remove)(oldestMember)
 
             # Add new member
             member = await Assocation.objects.add_assocation(
-                assoUsr, addRequest["member"]["id"]
+                self.connection.loggedPersona, assoType, addRequest["member"]["id"]
             )
 
-            assocations = await Assocation.objects.get_user_assocations(
+            assoLen = await Assocation.objects.get_user_assocations_count(
                 self.connection.loggedPersona, assoType
+            )
+
+            uid = Persona.objects.get_user_id_by_persona_id(member["id"])
+
+            self.connection.start_remote_transaction(
+                uid,
+                "asso",
+                TXN.NotifyAssociationUpdate.value,
+                {
+                    "domainPartition": domainPartition,
+                    "listSize": assoLen,
+                    "member": member,
+                    "operation": AssocationUpdateOperation.ADD.value,
+                    "owner": owner,
+                    "type": data.Get("type"),
+                },
             )
 
             if not member:
@@ -119,7 +137,7 @@ class AssociationService(Service):
                 "owner": owner,
                 "mutual": 0 if assoType == AssociationType.RECENT_PLAYERS else 1,
                 "outcome": outcome,
-                "listSize": len(assocations.members),
+                "listSize": assoLen,
             }
 
             result.append(resultFinal)
@@ -127,7 +145,7 @@ class AssociationService(Service):
         response = Packet()
         response.Set("domainPartition", domainPartition)
         response.Set("maxListSize", maxAssocations)
-        response.Set("results", result)
+        response.Set("result", result)
         response.Set("type", data.Get("type"))
 
         return response
@@ -141,7 +159,7 @@ class AssociationService(Service):
         if not assoType:
             return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
 
-        assoUsr = await Assocation.objects.get_user_assocations(
+        await Assocation.objects.get_user_assocations(
             self.connection.loggedPersona, assoType
         )
 
@@ -155,15 +173,8 @@ class AssociationService(Service):
 
             # Remove member
             member = await Assocation.objects.remove_assocation(
-                assoUsr, deleteRequest["member"]["id"]
+                self.connection.loggedPersona, assoType, deleteRequest["member"]["id"]
             )
-
-            assocations = await Assocation.objects.get_user_assocations(
-                self.connection.loggedPersona, assoType
-            )
-
-            if not member:
-                outcome = 23005
 
             owner = {
                 "id": self.connection.loggedPersona.id,
@@ -171,12 +182,35 @@ class AssociationService(Service):
                 "type": 1,
             }
 
+            assoLen = await Assocation.objects.get_user_assocations_count(
+                self.connection.loggedPersona, assoType
+            )
+
+            uid = Persona.objects.get_user_id_by_persona_id(member["id"])
+
+            self.connection.start_remote_transaction(
+                uid,
+                "asso",
+                TXN.NotifyAssociationUpdate.value,
+                {
+                    "domainPartition": domainPartition,
+                    "listSize": assoLen,
+                    "member": member,
+                    "operation": AssocationUpdateOperation.DEL.value,
+                    "owner": owner,
+                    "type": data.Get("type"),
+                },
+            )
+
+            if not member:
+                outcome = 23005
+
             resultFinal = {
                 "member": member,
                 "owner": owner,
                 "mutual": 0 if assoType == AssociationType.RECENT_PLAYERS else 1,
                 "outcome": outcome,
-                "listSize": len(assocations.members),
+                "listSize": assoLen,
             }
 
             result.append(resultFinal)
@@ -184,7 +218,7 @@ class AssociationService(Service):
         response = Packet()
         response.Set("domainPartition", domainPartition)
         response.Set("maxListSize", maxAssocations)
-        response.Set("results", result)
+        response.Set("result", result)
         response.Set("type", data.Get("type"))
 
         return response
@@ -198,35 +232,23 @@ class AssociationService(Service):
         if not assoType:
             return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
 
-        assocationMembers = await Assocation.objects.get_user_assocations(
+        assocationMembers = await Assocation.objects.get_user_assocations_dict(
             self.connection.loggedPersona, assoType
         )
 
+        owner = {
+            "id": self.connection.loggedPersona.id,
+            "name": self.connection.loggedPersona.name,
+            "type": 1,
+        }
+
         maxAssocations = 20 if assoType != AssociationType.RECENT_PLAYERS else 100
-
-        result = []
-
-        for member in assocationMembers:
-            owner = {
-                "id": self.connection.loggedPersona.id,
-                "name": self.connection.loggedPersona.name,
-                "type": 1,
-            }
-
-            resultFinal = {
-                "member": member,
-                "owner": owner,
-                "mutual": 0 if assoType == AssociationType.RECENT_PLAYERS else 1,
-                "outcome": 0,
-                "listSize": len(assocationMembers),
-            }
-
-            result.append(resultFinal)
 
         response = Packet()
         response.Set("domainPartition", domainPartition)
         response.Set("maxListSize", maxAssocations)
-        response.Set("results", result)
+        response.Set("members", assocationMembers)
+        response.Set("owner", owner)
         response.Set("type", data.Get("type"))
 
         return response
@@ -240,7 +262,7 @@ class AssociationService(Service):
         if not assoType:
             return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
 
-        assocationMembers = await Assocation.objects.get_user_assocations(
+        assocationMembers = await Assocation.objects.get_user_assocations_dict(
             self.connection.loggedPersona, assoType
         )
 
