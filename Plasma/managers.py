@@ -236,6 +236,11 @@ class PersonaManager(models.Manager):
         return self.filter(account=account, name=name).first()
 
     @sync_to_async
+    def get_user_id_by_persona_id(self, pid):
+        persona = self.filter(id=pid).first()
+        return persona.account.id
+
+    @sync_to_async
     def search_personas(self, account, name):
         name = name.replace("_*", "")
         filtered_personas = self.filter(name__icontains=name).exclude(account=account)
