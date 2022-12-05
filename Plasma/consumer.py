@@ -178,7 +178,8 @@ class PlasmaConsumer(BFBC2Consumer):
         self.pingTimer.start()
 
     async def external_send(self, event):
-        await self.transactor.start(event["service"], event["txn"], event["data"])
+        message = event["message"]
+        await self.transactor.start(message["service"], message["txn"], message["data"])
 
     async def start_remote_transaction(self, target, serviceStr, txnStr, data):
         active_session = cache.get(f"userSession:{target}")
