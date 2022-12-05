@@ -1,5 +1,6 @@
 import json
 from base64 import b64decode
+from datetime import timedelta
 
 from asgiref.sync import sync_to_async
 from django.contrib.auth.base_user import BaseUserManager
@@ -272,66 +273,86 @@ class PersonaManager(models.Manager):
 
 
 class AssocationManager(models.Manager):
-    @sync_to_async
-    def get_user_assocations(self, persona, type):
+    def __get_user_assocations(self, persona, type):
         usrAssocations, created = self.get_or_create(owner=persona, type=type)
 
         if created:
             usrAssocations.save()
 
-        assocations = usrAssocations.associationmember_set.all()
+        return usrAssocations
+
+    @sync_to_async
+    def get_user_assocations(self, persona, type):
+        return self.__get_user_assocations(persona, type)
+
+    @sync_to_async
+    def get_user_assocations_count(self, persona, type):
+        return self.__get_user_assocations(persona, type).associationmember_set.count()
+
+    @sync_to_async
+    def get_user_assocations_dict(self, persona, type):
+        assocations = self.__get_user_assocations(
+            persona, type
+        ).associationmember_set.all()
 
         return [
             {
-                "id": assocation.id,
-                "name": assocation.name,
+                "id": assocation.persona.id,
+                "name": assocation.persona.name,
                 "type": 1,
                 "created": assocation.created_at,
-                "modified": assocation.modified_at,
+                "modified": assocation.updated_at,
             }
             for assocation in assocations
         ]
 
     @sync_to_async
-    def add_assocation(self, usrAssocations, target_id):
+    def add_assocation(self, persona, type, target_id):
         from Plasma.models import Persona
+
+        usrAssocations = self.__get_user_assocations(persona, type)
 
         try:
             target_persona = Persona.objects.get(id=target_id)
         except Persona.DoesNotExist:
-            return False
+            return
 
         usrAssocations.members.add(target_persona)
         usrAssocations.save()
 
-        assocation = usrAssocations.associationmember_set.get(target=target_persona)
+        assocation = usrAssocations.associationmember_set.get(persona=target_persona)
 
         return {
-            "id": assocation.id,
-            "name": assocation.name,
+            "id": target_persona.id,
+            "name": target_persona.name,
             "type": 1,
             "created": assocation.created_at,
-            "modified": assocation.modified_at,
+            "modified": assocation.updated_at,
         }
 
     @sync_to_async
-    def remove_assocation(self, usrAssocations, target_id):
+    def remove_assocation(self, persona, type, target_id):
         from Plasma.models import Persona
+
+        usrAssocations = self.__get_user_assocations(persona, type)
 
         try:
             target_persona = Persona.objects.get(id=target_id)
         except Persona.DoesNotExist:
             return False
 
-        assocation = usrAssocations.associationmember_set.get(target=target_persona)
+        targetAssocations = self.__get_user_assocations(target_persona, type)
+        targetAssocations.members.remove(persona)
+
+        assocation = usrAssocations.associationmember_set.get(persona=target_persona)
 
         usrAssocations.members.remove(target_persona)
         usrAssocations.save()
 
         return {
-            "id": assocation.id,
-            "name": assocation.name,
+            "id": target_persona.id,
+            "name": target_persona.name,
             "type": 1,
             "created": assocation.created_at,
-            "modified": assocation.modified_at,
+            "modified": assocation.updated_at,
         }
