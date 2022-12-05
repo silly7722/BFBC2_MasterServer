@@ -32,6 +32,7 @@ class ConnectService(Service):
 
         self.creator_map[TXN.Ping] = self.__create_ping
         self.creator_map[TXN.MemCheck] = self.__create_memcheck
+        self.creator_map[TXN.Goodbye] = self.__create_goodbye
 
         self.resolver_map[TXN.Hello] = self.__handle_hello
         self.resolver_map[TXN.Ping] = self.__handle_ping
@@ -68,6 +69,14 @@ class ConnectService(Service):
         response.Set("memcheck", [])
         response.Set("type", 0)
         response.Set("salt", "".join(random.choice(string.digits) for _ in range(10)))
+
+        return response
+
+    async def __create_goodbye(self, data):
+        response = Packet()
+
+        for key in data:
+            response.Set(key, data[key])
 
         return response
 
