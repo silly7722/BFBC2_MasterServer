@@ -38,6 +38,7 @@ class Transactor:
     allowed_unscheduled_transactions = [
         ConnectTXN.MemCheck.value,
         ConnectTXN.Ping.value,
+        ConnectTXN.Goodbye.value,
         AssocationTXN.NotifyAssociationUpdate.value,
         MessageTXN.AsyncMessageEvent.value,
         MessageTXN.AsyncPurgedEvent.value,
