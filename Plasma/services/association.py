@@ -31,9 +31,6 @@ class AssociationService(Service):
         self.resolver_map[TXN.DeleteAssociations] = self.__handle_delete_associations
         self.resolver_map[TXN.GetAssociations] = self.__handle_get_associations
         self.resolver_map[TXN.GetAssociationCount] = self.__handle_get_association_count
-        self.resolver_map[
-            TXN.NotifyAssociationUpdate
-        ] = self.__handle_notify_association_update
 
     def _get_resolver(self, txn):
         return self.resolver_map[TXN(txn)]
@@ -281,15 +278,6 @@ class AssociationService(Service):
         response.Set("owner", owner)
 
         return response
-
-    async def __handle_notify_association_update(self, data):
-        """Notify the client that an association has been updated."""
-
-        # Is this even called by the game?
-
-        return NotImplementedError(
-            "NotifyAssociationUpdate packet handler is not implemented."
-        )
 
     async def __create_notify_association_update(self, data):
         """Create a notify association update packet."""
