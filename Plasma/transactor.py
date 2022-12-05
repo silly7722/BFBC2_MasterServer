@@ -13,6 +13,8 @@ from Plasma.services.connect import TXN as ConnectTXN
 from Plasma.services.connect import ConnectService
 from Plasma.services.message import TXN as MessageTXN
 from Plasma.services.message import ExtensibleMessageService
+from Plasma.services.presence import TXN as PresenceTXN
+from Plasma.services.presence import PresenceService
 
 
 class TransactionService(Enum):
@@ -20,6 +22,7 @@ class TransactionService(Enum):
     AccountService = "acct"
     AssociationService = "asso"
     ExtensibleMessageService = "xmsg"
+    PresenceService = "pres"
 
 
 class TransactionKind(Enum):
@@ -42,6 +45,7 @@ class Transactor:
         AssocationTXN.NotifyAssociationUpdate.value,
         MessageTXN.AsyncMessageEvent.value,
         MessageTXN.AsyncPurgedEvent.value,
+        PresenceTXN.AsyncPresenceStatusEvent.value,
     ]
     allowed_transactions_without_auth = [
         # All transactions from ConnectService are allowed without auth (not included in this list)
@@ -65,6 +69,7 @@ class Transactor:
         self.services[
             TransactionService.ExtensibleMessageService
         ] = ExtensibleMessageService(connection)
+        self.services[TransactionService.PresenceService] = PresenceService(connection)
 
     async def get_response(self, service, message):
         """Get response from a transaction"""
