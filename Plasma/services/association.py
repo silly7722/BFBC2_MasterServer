@@ -115,17 +115,6 @@ class AssociationService(Service):
                 "type": 1,
             }
 
-            print(
-                {
-                    "domainPartition": domainPartition,
-                    "listSize": assoLen,
-                    "member": member,
-                    "operation": AssocationUpdateOperation.ADD.value,
-                    "owner": owner,
-                    "type": data.Get("type"),
-                }
-            )
-
             await self.connection.start_remote_transaction(
                 uid,
                 "asso",
@@ -198,17 +187,6 @@ class AssociationService(Service):
             )
 
             uid = await Persona.objects.get_user_id_by_persona_id(member["id"])
-
-            print(
-                {
-                    "domainPartition": domainPartition,
-                    "listSize": assoLen,
-                    "member": member,
-                    "operation": AssocationUpdateOperation.DEL.value,
-                    "owner": owner,
-                    "type": data.Get("type"),
-                }
-            )
 
             await self.connection.start_remote_transaction(
                 uid,
