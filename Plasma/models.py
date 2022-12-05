@@ -116,7 +116,7 @@ class Account(AbstractBaseUser, PermissionsMixin):
         return self.is_superuser
 
     def __str__(self):
-        return self.nuid
+        return str(self.nuid)
 
     class Meta:
         verbose_name = "Account"
@@ -202,7 +202,7 @@ class SerialKey(models.Model):
     )
 
     def __str__(self):
-        return self.key
+        return str(self.key)
 
     class Meta:
         verbose_name = "Serial Key"
@@ -219,7 +219,7 @@ class Persona(models.Model):
     objects = PersonaManager()
 
     def __str__(self):
-        return f"{self.name}"
+        return str(self.name)
 
     class Meta:
         verbose_name = "Persona"
@@ -248,6 +248,9 @@ class Assocation(models.Model):
 
     objects = AssocationManager()
 
+    def __str__(self):
+        return f"{self.owner}"
+
     class Meta:
         verbose_name = "Association"
         verbose_name_plural = "Associations"
@@ -261,6 +264,8 @@ class AssociationMember(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return f"{self.persona} - {self.target}"
 
 
 class Attachment(models.Model):
