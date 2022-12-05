@@ -104,10 +104,13 @@ SESSION_CACHE_ALIAS = "default"
 # Cache
 # https://docs.djangoproject.com/en/4.1/ref/settings/#cache
 
+REDIS_HOST = get_config("REDIS_HOST", "redis")
+REDIS_PORT = int(get_config("REDIS_PORT", 6379))
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{get_config('REDIS_HOST', 'redis')}:{get_config('REDIS_PORT', '6379')}",
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
@@ -123,8 +126,8 @@ CHANNEL_LAYERS = {
         "CONFIG": {
             "hosts": [
                 (
-                    get_config("REDIS_HOST", "redis"),
-                    int(get_config("REDIS_PORT", "6379")),
+                    REDIS_HOST,
+                    REDIS_PORT,
                 )
             ],
         },
