@@ -107,9 +107,26 @@ class AssociationService(Service):
                 self.connection.loggedPersona, assoType
             )
 
-            uid = Persona.objects.get_user_id_by_persona_id(member["id"])
+            uid = await Persona.objects.get_user_id_by_persona_id(member["id"])
 
-            self.connection.start_remote_transaction(
+            owner = {
+                "id": self.connection.loggedPersona.id,
+                "name": self.connection.loggedPersona.name,
+                "type": 1,
+            }
+
+            print(
+                {
+                    "domainPartition": domainPartition,
+                    "listSize": assoLen,
+                    "member": member,
+                    "operation": AssocationUpdateOperation.ADD.value,
+                    "owner": owner,
+                    "type": data.Get("type"),
+                }
+            )
+
+            await self.connection.start_remote_transaction(
                 uid,
                 "asso",
                 TXN.NotifyAssociationUpdate.value,
@@ -125,12 +142,6 @@ class AssociationService(Service):
 
             if not member:
                 outcome = 23005
-
-            owner = {
-                "id": self.connection.loggedPersona.id,
-                "name": self.connection.loggedPersona.name,
-                "type": 1,
-            }
 
             resultFinal = {
                 "member": member,
@@ -186,9 +197,20 @@ class AssociationService(Service):
                 self.connection.loggedPersona, assoType
             )
 
-            uid = Persona.objects.get_user_id_by_persona_id(member["id"])
+            uid = await Persona.objects.get_user_id_by_persona_id(member["id"])
 
-            self.connection.start_remote_transaction(
+            print(
+                {
+                    "domainPartition": domainPartition,
+                    "listSize": assoLen,
+                    "member": member,
+                    "operation": AssocationUpdateOperation.DEL.value,
+                    "owner": owner,
+                    "type": data.Get("type"),
+                }
+            )
+
+            await self.connection.start_remote_transaction(
                 uid,
                 "asso",
                 TXN.NotifyAssociationUpdate.value,
@@ -294,29 +316,9 @@ class AssociationService(Service):
     async def __create_notify_association_update(self, data):
         """Create a notify association update packet."""
 
-        # Is this even used?
+        response = Packet()
 
-        # {
-        #     "type": string,
-        #     "domainPartition": {
-        #        "domain": string,
-        #        "subDomain": string
-        #        "Key": string
-        #    },
-        #    "entity": {
-        #       "id": int,
-        #       "type": int,
-        #       "name": string,
-        #     },
-        #     "member": {
-        #        "created": datetime,
-        #        "modified": datetime,
-        #     },
-        #     "listSize": int,
-        #     "mutual": int,
-        #     "operation": "add" or "del"
-        # }
+        for key in data:
+            response.Set(key, data[key])
 
-        raise NotImplementedError(
-            "NotifyAssociationUpdate packet creation is not implemented."
-        )
+        return response
