@@ -1,5 +1,9 @@
 import threading
 
+from channels.layers import get_channel_layer
+from django.core.cache import cache
+from packaging import version
+
 from BFBC2_MasterServer.consumer import BFBC2Consumer
 from BFBC2_MasterServer.globals import (
     CLIENT_INITIAL_MEMCHECK_INTERVAL,
@@ -9,9 +13,6 @@ from BFBC2_MasterServer.globals import (
     SERVER_MEMCHECK_INTERVAL,
     SERVER_PING_INTERVAL,
 )
-from django.core.cache import cache
-from packaging import version
-
 from Plasma.enumerators.ClientLocale import ClientLocale
 from Plasma.enumerators.ClientPlatform import ClientPlatform
 from Plasma.enumerators.ClientType import ClientType
@@ -175,3 +176,23 @@ class PlasmaConsumer(BFBC2Consumer):
             self.__ping_client,
         )
         self.pingTimer.start()
+
+    async def external_send(self, event):
+        await self.transactor.start(event["service"], event["txn"], event["data"])
+
+    async def start_remote_transaction(self, target, serviceStr, txnStr, data):
+        active_session = cache.get(f"userSession:{target}")
+        channel_layer = get_channel_layer()
+
+        if active_session:
+            await channel_layer.send(
+                active_session,
+                {
+                    "type": "external.send",
+                    "message": {
+                        "service": serviceStr,
+                        "txn": txnStr,
+                        "data": data,
+                    },
+                },
+            )

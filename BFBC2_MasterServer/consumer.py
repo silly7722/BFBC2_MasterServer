@@ -41,3 +41,6 @@ class BFBC2Consumer(AsyncWebsocketConsumer):
     async def send_packet(self, packet: Packet):
         self.logger.debug(f"-> {packet}")
         await self.send(bytes_data=packet.compile())
+
+    async def external_send(self, event):
+        raise NotImplementedError("external_send not implemented")
