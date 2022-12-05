@@ -210,24 +210,21 @@ class AccountService(Service):
                 if not allow_unentitled:
                     return TransactionError(TransactionError.Code.NOT_ENTITLED_TO_GAME)
 
-        active_session = cache.get(f"userSession:{user.id}")
-        channel_layer = get_channel_layer()
+            active_session = cache.get(f"userSession:{user.id}")
 
-        if active_session:
-            if active_session != self.connection.channel_name:
-                self.connection.logger.warning(
-                    f"User {user.id} has active session, destroying it"
-                )
+            if active_session:
+                if active_session != self.connection.channel_name:
+                    self.connection.logger.warning(
+                        f"User {user.id} has active session, destroying it"
+                    )
 
-                await channel_layer.send(
-                    active_session,
-                    {
-                        "type": "external.send",
-                        "message": {"TXN": ConnectTXN.Goodbye.value, "reason": 2},
-                    },
-                )
+                    await self.connection.start_remote_transaction(
+                        user.id, "fsys", "Goodbye", {"reason": 2}
+                    )
 
-        cache.set(f"userSession:{user.id}", self.connection.channel_name, timeout=None)
+            cache.set(
+                f"userSession:{user.id}", self.connection.channel_name, timeout=None
+            )
 
         encryptedLoginInfo = None
 
