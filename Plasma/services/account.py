@@ -9,9 +9,6 @@ from enum import Enum
 from pathlib import Path
 
 from asgiref.sync import sync_to_async
-from BFBC2_MasterServer.packet import Packet
-from BFBC2_MasterServer.service import Service
-from BFBC2_MasterServer.tools import legacy_b64encode
 from channels.auth import database_sync_to_async, get_user, login
 from channels.layers import get_channel_layer
 from django.conf import settings
@@ -21,6 +18,10 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from email_validator import EmailNotValidError, validate_email
+
+from BFBC2_MasterServer.packet import Packet
+from BFBC2_MasterServer.service import Service
+from BFBC2_MasterServer.tools import legacy_b64encode
 from Plasma.enumerators.ActivationResult import ActivationResult
 from Plasma.enumerators.ClientType import ClientType
 from Plasma.error import TransactionError
@@ -890,11 +891,13 @@ class AccountService(Service):
 
         users_info = []
 
-        for name in users_to_lookup:
-            user_info = await Persona.objects.get_user_info(name)
+        for userInfo in users_to_lookup:
+            user_info = await Persona.objects.get_user_info(userInfo.get("userName"))
 
             if not user_info:
-                raise TransactionError(TransactionError.Code.TRANSACTION_DATA_NOT_FOUND)
+                return TransactionError(
+                    TransactionError.Code.TRANSACTION_DATA_NOT_FOUND
+                )
 
             users_info.append(user_info)
 
