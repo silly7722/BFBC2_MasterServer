@@ -4,6 +4,7 @@ from django.db import models
 from Plasma.managers import (
     AssocationManager,
     EntitlementManager,
+    MessageManager,
     PersonaManager,
     UserManager,
 )
@@ -259,3 +260,57 @@ class AssociationMember(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+
+class Attachment(models.Model):
+    message = models.ForeignKey("Message", on_delete=models.CASCADE)
+
+    key = models.CharField(
+        max_length=255, verbose_name="Key", help_text="Key of the attachment."
+    )
+    type = models.CharField(
+        max_length=255, verbose_name="Type", help_text="Type of the attachment."
+    )
+    data = models.TextField(verbose_name="Data", help_text="Data of the attachment.")
+
+    def __str__(self) -> str:
+        return f"{self.key} ({self.type})"
+
+    class Meta:
+        verbose_name = "Message Attachment"
+        verbose_name_plural = "Message Attachments"
+        ordering = ("id",)
+
+
+class Message(models.Model):
+    sender = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name="sender")
+    receivers = models.ManyToManyField(Persona, related_name="receivers")
+
+    delivery_type = models.CharField(
+        max_length=255,
+        verbose_name="Delivery Type",
+        help_text="Type of delivery for this message.",
+    )
+    message_type = models.CharField(
+        max_length=255, verbose_name="Message Type", help_text="Type of the message."
+    )
+    purge_strategy = models.CharField(
+        max_length=255,
+        verbose_name="Purge Strategy",
+        help_text="Purge strategy of the message.",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+
+    objects = MessageManager()
+
+    def __str__(self):
+        return f"{self.sender} -> {','.join(str(receiver) for receiver in self.receivers.all())} ({self.message_type})"
+
+    class Meta:
+        verbose_name = "Message"
+        verbose_name_plural = "Messages"
+        ordering = ("id",)

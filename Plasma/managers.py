@@ -356,3 +356,114 @@ class AssocationManager(models.Manager):
             "created": assocation.created_at,
             "modified": assocation.updated_at,
         }
+
+
+class MessageManager(models.Manager):
+    @sync_to_async
+    def send_message(self, persona, data):
+        from Plasma.models import Attachment, Persona
+
+        attachments_raw = data.Get("attachments")
+        to = data.Get("to")
+
+        if attachments_raw is None or to is None:
+            return [], None
+
+        receivers = []
+
+        for receiver_id in to:
+            try:
+                receiver = Persona.objects.get(id=receiver_id)
+                receivers.append(receiver)
+            except Persona.DoesNotExist:
+                return [], None
+
+        expires_second = data.Get("expires")
+
+        if expires_second is None:
+            return [], None
+
+        expiration_date = timezone.now() + timedelta(seconds=expires_second)
+
+        deliveryType = data.Get("deliveryType")
+        messageType = data.Get("messageType")
+        purgeStrategy = data.Get("purgeStrategy")
+
+        message = self.create(
+            sender=persona,
+            delivery_type=deliveryType,
+            message_type=messageType,
+            purge_strategy=purgeStrategy,
+            expires_at=expiration_date,
+        )
+
+        attachments = []
+
+        for attachment in attachments_raw:
+            attachment_obj = Attachment.objects.create(
+                message=message,
+                key=attachment.get("key"),
+                type=attachment.get("type"),
+                data=attachment.get("data"),
+            )
+
+            attachments.append(attachment_obj)
+
+        message.receivers.add(*receivers)
+        message.save()
+
+        return receivers, message.id
+
+    @sync_to_async
+    def get_messages(self, persona, attachmentTypes):
+        from Plasma.models import Attachment
+
+        message_objects = self.filter(
+            receivers__id=persona.id, expires_at__gte=timezone.now()
+        )
+        message_list = []
+
+        for message_obj in message_objects:
+            attachments = []
+            receivers = []
+
+            for attachment in Attachment.objects.filter(message=message_obj):
+                if attachment.type in attachmentTypes:
+                    attachment_data = {
+                        "key": attachment.key,
+                        "type": attachment.type,
+                        "data": attachment.data,
+                    }
+
+                    attachments.append(attachment_data)
+
+            for receiver in message_obj.receivers.all():
+                receiver_data = {"name": receiver.name, "id": receiver.id, "type": 1}
+
+                receivers.append(receiver_data)
+
+            message_data = {
+                "attachments": attachments,
+                "deliveryType": message_obj.delivery_type,
+                "messageId": message_obj.id,
+                "messageType": message_obj.message_type,
+                "purgeStrategy": message_obj.purge_strategy,
+                "from": {
+                    "name": message_obj.sender.name,
+                    "id": message_obj.sender.id,
+                    "type": 1,
+                },
+                "to": receivers,
+                "timeSent": message_obj.created_at,
+                "expiration": int(
+                    (message_obj.expires_at - timezone.now()).total_seconds()
+                ),
+            }
+
+            message_list.append(message_data)
+
+        return message_list
+
+    @sync_to_async
+    def delete_message(self, message_id):
+        self.get(id=message_id).delete()
