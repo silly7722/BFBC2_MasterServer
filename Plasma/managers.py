@@ -358,6 +358,49 @@ class AssocationManager(models.Manager):
 
 
 class MessageManager(models.Manager):
+    def __get_message_data(self, message_id, attachmentTypes=None):
+        from Plasma.models import Attachment
+
+        message_obj = self.get(id=message_id)
+
+        attachments = []
+        receivers = []
+
+        for attachment in Attachment.objects.filter(message=message_obj):
+            attachment_data = {
+                "key": attachment.key,
+                "type": attachment.type,
+                "data": attachment.data,
+            }
+
+            if attachmentTypes is None or attachment.type in attachmentTypes:
+                attachments.append(attachment_data)
+
+        for receiver in message_obj.receivers.all():
+            receiver_data = {"name": receiver.name, "id": receiver.id, "type": 1}
+
+            receivers.append(receiver_data)
+
+        message_data = {
+            "attachments": attachments,
+            "deliveryType": message_obj.delivery_type,
+            "messageId": message_obj.id,
+            "messageType": message_obj.message_type,
+            "purgeStrategy": message_obj.purge_strategy,
+            "from": {
+                "name": message_obj.sender.name,
+                "id": message_obj.sender.id,
+                "type": 1,
+            },
+            "to": receivers,
+            "timeSent": message_obj.created_at,
+            "expiration": int(
+                (message_obj.expires_at - timezone.now()).total_seconds()
+            ),
+        }
+
+        return message_data
+
     @sync_to_async
     def send_message(self, persona, data):
         from Plasma.models import Attachment, Persona
@@ -415,53 +458,24 @@ class MessageManager(models.Manager):
 
     @sync_to_async
     def get_messages(self, persona, attachmentTypes):
-        from Plasma.models import Attachment
-
         message_objects = self.filter(
             receivers__id=persona.id, expires_at__gte=timezone.now()
         )
         message_list = []
 
         for message_obj in message_objects:
-            attachments = []
-            receivers = []
-
-            for attachment in Attachment.objects.filter(message=message_obj):
-                if attachment.type in attachmentTypes:
-                    attachment_data = {
-                        "key": attachment.key,
-                        "type": attachment.type,
-                        "data": attachment.data,
-                    }
-
-                    attachments.append(attachment_data)
-
-            for receiver in message_obj.receivers.all():
-                receiver_data = {"name": receiver.name, "id": receiver.id, "type": 1}
-
-                receivers.append(receiver_data)
-
-            message_data = {
-                "attachments": attachments,
-                "deliveryType": message_obj.delivery_type,
-                "messageId": message_obj.id,
-                "messageType": message_obj.message_type,
-                "purgeStrategy": message_obj.purge_strategy,
-                "from": {
-                    "name": message_obj.sender.name,
-                    "id": message_obj.sender.id,
-                    "type": 1,
-                },
-                "to": receivers,
-                "timeSent": message_obj.created_at,
-                "expiration": int(
-                    (message_obj.expires_at - timezone.now()).total_seconds()
-                ),
-            }
-
+            message_data = self.__get_message_data(message_obj.id)
             message_list.append(message_data)
 
         return message_list
+
+    @sync_to_async
+    def get_message(self, message_id):
+        return self.__get_message_data(message_id)
+
+    @sync_to_async
+    def get_sender_id_from_message(self, message):
+        return message.sender.id
 
     @sync_to_async
     def delete_message(self, message_id):
