@@ -30,6 +30,10 @@ SECRET_KEY = get_secrets("SECRET_KEY")
 DEBUG = strtobool(os.getenv("DEBUG", "False"))
 
 ALLOWED_HOSTS = ["*"] if DEBUG else get_config("ALLOWED_HOSTS", "").split(";")
+INDEX_REDIRECT_TO = get_config(
+    "INDEX_REDIRECT_TO",
+    "https://www.ea.com/games/battlefield/battlefield-bad-company-2",
+)
 
 
 # Application definition
@@ -45,7 +49,6 @@ INSTALLED_APPS = [
     "channels",
     "Plasma",
     "Theater",
-    "easo",
 ]
 
 MIDDLEWARE = [
@@ -231,10 +234,11 @@ WHITENOISE_USE_FINDERS = True
 WHITENOISE_MIMETYPES = {"": "text/plain"}
 
 # Security
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_HSTS_SECONDS = -1
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = -1
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True

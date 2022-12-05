@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_USER_FILE: /run/configs/postgres_user
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-      POSTGRES_DB: /run/configs/postgres_db
+      POSTGRES_DB_FILE: /run/configs/postgres_db
     configs:
       - source: bfbc2emu_postgres_db
         target: /run/configs/postgres_db
@@ -17,7 +17,7 @@ services:
         target: /run/secrets/postgres_password
     networks:
       - internal
-  
+
   redis:
     image: redis:alpine
     networks:
@@ -36,6 +36,8 @@ services:
     configs:
       - source: bfbc2emu_allowed_hosts
         target: /run/configs/allowed_hosts
+      - source: bfbc2emu_index_redirect_to
+        target: /run/configs/index_redirect_to
       - source: bfbc2emu_postgres_db
         target: /run/configs/postgres_db
       - source: bfbc2emu_postgres_user
@@ -65,7 +67,9 @@ networks:
     external: true
 
 configs:
-  bfbc2emu_allowed_hosts: 
+  bfbc2emu_allowed_hosts:
+    external: true
+  bfbc2emu_index_redirect_to:
     external: true
   bfbc2emu_postgres_db:
     external: true

@@ -16,7 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+from easo.views import appindex
+
 urlpatterns = [
+    path("", appindex),
     path("admin/", admin.site.urls),
     path("easo/", include("easo.urls")),
 ]

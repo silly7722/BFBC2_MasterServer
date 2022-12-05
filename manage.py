@@ -6,6 +6,14 @@ import sys
 
 def main():
     """Run administrative tasks."""
+
+    if sys.argv[1] == "healthcheck":
+        import urllib.request
+
+        # Following will raise an exception if the server is not running
+        urllib.request.urlopen("http://localhost:8000/easo/healthcheck").read()
+        return
+
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "BFBC2_MasterServer.settings")
     try:
         from django.core.management import execute_from_command_line

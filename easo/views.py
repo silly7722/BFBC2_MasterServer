@@ -1,8 +1,23 @@
+from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.views.defaults import server_error
 
 # Create your views here.
+
+
+def appindex(request):
+    # Redirect to base domain
+
+    if settings.DEBUG:
+        return HttpResponse()
+
+    return redirect(settings.INDEX_REDIRECT_TO)
+
+
+def healthcheck(request):
+    return HttpResponse("<h1>It Works!</h1>")
 
 
 def fileupload_locker(request):
