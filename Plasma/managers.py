@@ -326,8 +326,8 @@ class AssocationManager(models.Manager):
             "id": target_persona.id,
             "name": target_persona.name,
             "type": 1,
-            "created": assocation.created_at,
-            "modified": assocation.updated_at,
+            "created": assocation.created_at.strftime("%b-%d-%Y %H:%M:%S UTC"),
+            "modified": assocation.updated_at.strftime("%b-%d-%Y %H:%M:%S UTC"),
         }
 
     @sync_to_async
@@ -353,8 +353,8 @@ class AssocationManager(models.Manager):
             "id": target_persona.id,
             "name": target_persona.name,
             "type": 1,
-            "created": assocation.created_at,
-            "modified": assocation.updated_at,
+            "created": assocation.created_at.strftime("%b-%d-%Y %H:%M:%S UTC"),
+            "modified": assocation.updated_at.strftime("%b-%d-%Y %H:%M:%S UTC"),
         }
 
 
