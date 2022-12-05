@@ -1,5 +1,6 @@
 import gc
 from base64 import b64decode, b64encode
+from dataclasses import make_dataclass
 from enum import Enum
 
 from BFBC2_MasterServer.packet import HEADER_LENGTH, Packet
@@ -91,8 +92,17 @@ class Transactor:
 
         return transaction_response
 
-    async def start(self, service: TransactionService, txn: Enum, data: dict):
+    async def start(
+        self, service: TransactionService | str, txn: Enum | str, data: dict
+    ):
         """Start a unscheduled transaction"""
+
+        if isinstance(service, str):
+            service = TransactionService(service)
+
+        if isinstance(txn, str):
+            X = make_dataclass("X", [("value", str)])
+            txn = X(value=txn)
 
         if txn.value not in self.allowed_unscheduled_transactions:
             raise TransactionException("Transaction not allowed to be unscheduled")
