@@ -2,7 +2,15 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from Plasma.models import Account, Assocation, Entitlement, Persona, SerialKey
+from Plasma.models import (
+    Account,
+    Assocation,
+    Attachment,
+    Entitlement,
+    Message,
+    Persona,
+    SerialKey,
+)
 
 # Register your models here.
 
@@ -159,7 +167,32 @@ class AssocationAdmin(admin.ModelAdmin):
     )
 
     def assocations(self, obj):
-        return [",".join([member for member in obj.associationmember_set.all()])]
+        return [",".join([str(member) for member in obj.associationmember_set.all()])]
+
+
+class MessageAdmin(admin.ModelAdmin):
+    list_display = [
+        "id",
+        "sender",
+        "delivery_type",
+        "message_type",
+        "purge_strategy",
+    ]
+    list_filter = (
+        "sender",
+        "receivers",
+        "delivery_type",
+        "message_type",
+        "purge_strategy",
+    )
+
+
+class AttachmentAdmin(admin.ModelAdmin):
+    list_display = ["id", "message", "key", "type", "data"]
+    list_filter = (
+        "key",
+        "type",
+    )
 
 
 admin.site.register(Account, AccountAdmin)
@@ -167,3 +200,5 @@ admin.site.register(Entitlement, EntitlementAdmin)
 admin.site.register(SerialKey, SerialKeyAdmin)
 admin.site.register(Persona, PersonaAdmin)
 admin.site.register(Assocation, AssocationAdmin)
+admin.site.register(Message, MessageAdmin)
+admin.site.register(Attachment, AttachmentAdmin)
