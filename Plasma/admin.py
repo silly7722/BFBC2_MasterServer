@@ -9,6 +9,7 @@ from Plasma.models import (
     Entitlement,
     Message,
     Persona,
+    Ranking,
     SerialKey,
 )
 
@@ -195,6 +196,11 @@ class AttachmentAdmin(admin.ModelAdmin):
     )
 
 
+class RankingAdmin(admin.ModelAdmin):
+    list_display = ["id", "persona", "key", "value"]
+    list_filter = ("persona", "key")
+
+
 admin.site.register(Account, AccountAdmin)
 admin.site.register(Entitlement, EntitlementAdmin)
 admin.site.register(SerialKey, SerialKeyAdmin)
@@ -202,3 +208,4 @@ admin.site.register(Persona, PersonaAdmin)
 admin.site.register(Assocation, AssocationAdmin)
 admin.site.register(Message, MessageAdmin)
 admin.site.register(Attachment, AttachmentAdmin)
+admin.site.register(Ranking, RankingAdmin)
