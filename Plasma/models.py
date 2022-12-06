@@ -6,6 +6,7 @@ from Plasma.managers import (
     EntitlementManager,
     MessageManager,
     PersonaManager,
+    RankingManager,
     UserManager,
 )
 
@@ -319,3 +320,20 @@ class Message(models.Model):
         verbose_name = "Message"
         verbose_name_plural = "Messages"
         ordering = ("id",)
+
+
+class Ranking(models.Model):
+    persona = models.ForeignKey(Persona, on_delete=models.CASCADE)
+
+    key = models.CharField(
+        max_length=255, verbose_name="Key", help_text="Key of the ranking."
+    )
+    value = models.FloatField(verbose_name="Value", help_text="Value of the ranking.")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = RankingManager()
+
+    def __str__(self) -> str:
+        return f"{str(self.persona)} - {self.key}"

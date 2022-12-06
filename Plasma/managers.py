@@ -5,6 +5,9 @@ from datetime import timedelta
 from asgiref.sync import sync_to_async
 from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
+from django.db.models import F
+from django.db.models.expressions import Window
+from django.db.models.functions import RowNumber
 from django.utils import timezone
 
 from Plasma.enumerators.ActivationResult import ActivationResult
@@ -485,3 +488,76 @@ class MessageManager(models.Manager):
     @sync_to_async
     def delete_message(self, message_id):
         self.get(id=message_id).delete()
+
+
+class RankingManager(models.Manager):
+    @sync_to_async
+    def get_stat(self, persona, key):
+        from Plasma.models import Ranking
+
+        try:
+            return self.get(persona=persona, key=key).value
+        except Ranking.DoesNotExist:
+            return 0.0
+
+    @sync_to_async
+    def get_stat_by_id(self, persona_id, key):
+        from Plasma.models import Ranking
+
+        try:
+            return self.get(persona__id=persona_id, key=key).value
+        except Ranking.DoesNotExist:
+            return 0.0
+
+    @sync_to_async
+    def get_ranked_stat(self, persona, key):
+        from Plasma.models import Ranking
+
+        filtered = self.filter(key=key)
+        ranked = filtered.annotate(
+            rank=Window(expression=RowNumber(), order_by=F("value").desc())
+        )
+
+        try:
+            stat = ranked.get(persona=persona)
+        except Ranking.DoesNotExist:
+            return 0.0, 250001
+
+        return stat.value, stat.rank
+
+    @sync_to_async
+    def get_ranked_stat_by_id(self, persona_id, key):
+        from Plasma.models import Ranking
+
+        filtered = self.filter(key=key)
+        ranked = filtered.annotate(
+            rank=Window(expression=RowNumber(), order_by=F("value").desc())
+        )
+
+        try:
+            stat = ranked.get(persona__id=persona_id)
+        except Ranking.DoesNotExist:
+            return 0.0, 250001
+
+        return stat.value, stat.rank
+
+    @sync_to_async
+    def get_leaderboard_users(self, baseKey, minRank, maxRank, excludePersona=None):
+        filtered = self.filter(key=baseKey).exclude(persona=excludePersona)
+        ranked = filtered.annotate(
+            rank=Window(expression=RowNumber(), order_by=F("value").desc())
+        )
+
+        ranked_personas = ranked[minRank - 1 : maxRank + 1]
+        personas = []
+
+        for stat in ranked_personas:
+            personas.append(
+                {
+                    "owner": stat.persona.id,
+                    "name": stat.persona.name,
+                    "rank": stat.rank,
+                }
+            )
+
+        return personas
