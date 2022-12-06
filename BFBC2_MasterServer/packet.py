@@ -41,7 +41,7 @@ class Packet:
             data = kwargs.get("data", None)
 
             if data:
-                self.ParseTransactionData(data)
+                self.__read_data(data, 0)
 
     def __str__(self):
         length = len(self.compile()) if self.__length == 0 else self.__length
@@ -80,7 +80,10 @@ class Packet:
                 f"Packet length does not match (Received: {received_length}, Expected: {self.__length})"
             )
 
-        transaction_data = raw_data[HEADER_LENGTH:].decode("utf-8").split("\n")
+        self.__read_data(raw_data, HEADER_LENGTH)
+
+    def __read_data(self, raw_data, offset):
+        transaction_data = raw_data[offset:].decode("utf-8").split("\n")
 
         # If transaction data is null terminated, remove null terminator before parsing
         if transaction_data[-1] == "\0":
@@ -96,7 +99,18 @@ class Packet:
 
     def __make_key_value_pairs(self, transaction_data):
         """Make key value pairs from transaction data"""
-        return [data.split("=", 1) for data in transaction_data]
+        final = []
+
+        for data in transaction_data:
+            pair = data.split("=", 1)
+
+            if len(pair) != 2:
+                # Ignore invalid pairs
+                continue
+
+            final.append(pair)
+
+        return final
 
     def __add_branch(self, tree, vector, value):
         key = vector[0]
