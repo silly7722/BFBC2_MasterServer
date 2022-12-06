@@ -67,6 +67,7 @@ class PlasmaConsumer(BFBC2Consumer):
             # Set persona session to expire in 3 hours (approximitely that's how long the session is valid in original server)
             cache.touch(f"personaLoginKey:{self.loggedPersona.id}", 60 * 60 * 3)
             cache.touch(f"lkeyMap:{self.loggedPersonaKey}", 60 * 60 * 3)
+            cache.delete(f"presence:{self.loggedPersona.id}")
 
     async def receive(self, text_data=None, bytes_data=None):
         message = await super().receive(text_data, bytes_data)

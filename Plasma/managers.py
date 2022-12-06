@@ -237,6 +237,11 @@ class PersonaManager(models.Manager):
         return self.filter(account=account, name=name).first()
 
     @sync_to_async
+    def get_persona_by_id(self, persona_id):
+        persona = self.filter(id=persona_id).first()
+        return {"name": persona.name, "id": persona.id, "type": 0}
+
+    @sync_to_async
     def get_user_id_by_persona_id(self, pid):
         persona = self.filter(id=pid).first()
         return persona.account.id
