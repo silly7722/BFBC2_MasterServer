@@ -7,6 +7,7 @@ from Plasma.managers import (
     MessageManager,
     PersonaManager,
     RankingManager,
+    RecordManager,
     UserManager,
 )
 
@@ -337,3 +338,25 @@ class Ranking(models.Model):
 
     def __str__(self) -> str:
         return f"{str(self.persona)} - {self.key}"
+
+
+class RecordName(models.TextChoices):
+    Clan = "clan", "Clan"
+    Dogtags = "dogtags", "Dogtag"
+
+
+class Record(models.Model):
+    persona = models.ForeignKey(Persona, on_delete=models.CASCADE)
+
+    name = models.CharField(max_length=255, choices=RecordName.choices)
+
+    key = models.IntegerField(verbose_name="Key", help_text="Key of the record.")
+    value = models.TextField(verbose_name="Value", help_text="Value of the record.")
+
+    objects = RecordManager()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return f"{str(self.persona)} - {self.name} - {self.key}"

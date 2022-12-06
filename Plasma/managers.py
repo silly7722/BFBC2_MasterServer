@@ -561,3 +561,28 @@ class RankingManager(models.Manager):
             )
 
         return personas
+
+
+class RecordManager(models.Manager):
+    @sync_to_async
+    def add_records(self, persona, name, key, value):
+        self.create(persona=persona, name=name, key=key, value=value)
+
+    @sync_to_async
+    def update_records(self, persona, name, key, value):
+        record = self.get(persona=persona, name=name, key=key)
+        record.value = value
+        record.save()
+
+    @sync_to_async
+    def get_records(self, persona, name):
+        records = self.filter(persona=persona, name=name).order_by("-updated_at")
+
+        return [
+            {
+                "key": record.key,
+                "value": record.value,
+                "updated_at": record.updated_at.strftime("%Y-%m-%d %H:%M:%S.%f"),
+            }
+            for record in records
+        ]
