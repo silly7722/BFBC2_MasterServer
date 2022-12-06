@@ -16,6 +16,7 @@ from BFBC2_MasterServer.globals import (
 from Plasma.enumerators.ClientLocale import ClientLocale
 from Plasma.enumerators.ClientPlatform import ClientPlatform
 from Plasma.enumerators.ClientType import ClientType
+from Plasma.models import Persona
 from Plasma.services.connect import TXN as ConnectTXN
 from Plasma.transactor import TransactionKind, TransactionService, Transactor
 
@@ -40,6 +41,8 @@ class PlasmaConsumer(BFBC2Consumer):
 
     loggedUser, loggedUserKey = None, None
     loggedPersona, loggedPersonaKey = None, None
+
+    subscribedTo = []
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -68,6 +71,13 @@ class PlasmaConsumer(BFBC2Consumer):
             cache.touch(f"personaLoginKey:{self.loggedPersona.id}", 60 * 60 * 3)
             cache.touch(f"lkeyMap:{self.loggedPersonaKey}", 60 * 60 * 3)
             cache.delete(f"presence:{self.loggedPersona.id}")
+
+            owner = await Persona.objects.get_persona_by_id(self.loggedPersona.id)
+
+            for userId in self.subscribedTo:
+                await self.start_remote_transaction(
+                    userId, "pres", "AsyncPresenceStatusEvent", {"owner": owner}
+                )
 
     async def receive(self, text_data=None, bytes_data=None):
         message = await super().receive(text_data, bytes_data)

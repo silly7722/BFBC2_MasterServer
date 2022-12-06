@@ -1,3 +1,4 @@
+import asyncio
 import json
 from base64 import b64decode, b64encode
 from enum import Enum
@@ -18,9 +19,6 @@ class TXN(Enum):
 
 
 class PresenceService(Service):
-
-    subscribed_to = []
-
     def __init__(self, connection) -> None:
         super().__init__(connection)
 
@@ -47,8 +45,8 @@ class PresenceService(Service):
             userId = request["userId"]
 
             # Add the user to the list of subscribed users (if not already subscribed)
-            if userId not in self.subscribed_to:
-                self.subscribed_to.append(userId)
+            if userId not in self.connection.subscribedTo:
+                self.connection.subscribedTo.append(userId)
 
             owner = await Persona.objects.get_persona_by_id(userId)
 
@@ -57,10 +55,12 @@ class PresenceService(Service):
             currPres = cache.get(f"presence:{userId}")
 
             if currPres:
-                await self.connection.transactor.start(
-                    "pres",
-                    TXN.AsyncPresenceStatusEvent,
-                    {"initial": True, "owner": owner, "status": currPres},
+                asyncio.ensure_future(
+                    self.connection.transactor.start(
+                        "pres",
+                        TXN.AsyncPresenceStatusEvent,
+                        {"initial": True, "owner": owner, "status": currPres},
+                    )
                 )
 
         response = Packet()
@@ -77,8 +77,8 @@ class PresenceService(Service):
             userId = request["userId"]
 
             # Remove the user from the list of subscribed users (if subscribed)
-            if userId in self.subscribed_to:
-                self.subscribed_to.remove(userId)
+            if userId in self.connection.subscribedTo:
+                self.connection.subscribedTo.remove(userId)
 
             owner = await Persona.objects.get_persona_by_id(userId)
 
@@ -102,7 +102,7 @@ class PresenceService(Service):
             self.connection.loggedPersona.id
         )
 
-        for userId in self.subscribed_to:
+        for userId in self.connection.subscribedTo:
             # I'm assuming here that if client A is subscribed to client B, client B is also subscribed to client A
             # (Because the clients should be friends with each other)
             await self.connection.start_remote_transaction(
@@ -127,16 +127,14 @@ class PresenceService(Service):
 
         if (
             owner["id"] == self.connection.loggedPersona.id
-            or owner["id"] in self.subscribed_to
+            or owner["id"] in self.connection.subscribedTo
         ):
             status = data.get("status")
 
-            if not status:
-                return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
+            if status:
+                statusDecoded = b64decode(status)
+                statusJSON = json.loads(statusDecoded)
 
-            statusDecoded = b64decode(status)
-            statusJSON = json.loads(statusDecoded)
-
-            response.Set("status", statusJSON)
+                response.Set("status", statusJSON)
 
         return response
