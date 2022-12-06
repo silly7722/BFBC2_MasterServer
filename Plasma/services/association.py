@@ -1,7 +1,6 @@
 from enum import Enum
 
-from asgiref.sync import sync_to_async
-from channels.auth import database_sync_to_async, get_user
+from channels.auth import database_sync_to_async
 
 from BFBC2_MasterServer.packet import Packet
 from BFBC2_MasterServer.service import Service

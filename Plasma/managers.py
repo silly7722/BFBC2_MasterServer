@@ -322,7 +322,7 @@ class AssocationManager(models.Manager):
         try:
             target_persona = Persona.objects.get(id=target_id)
         except Persona.DoesNotExist:
-            return
+            return None
 
         usrAssocations.members.add(target_persona)
         usrAssocations.save()

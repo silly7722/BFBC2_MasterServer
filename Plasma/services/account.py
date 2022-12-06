@@ -10,7 +10,6 @@ from pathlib import Path
 
 from asgiref.sync import sync_to_async
 from channels.auth import database_sync_to_async, get_user, login
-from channels.layers import get_channel_layer
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import update_last_login
@@ -26,7 +25,6 @@ from Plasma.enumerators.ActivationResult import ActivationResult
 from Plasma.enumerators.ClientType import ClientType
 from Plasma.error import TransactionError
 from Plasma.models import Entitlement, Persona
-from Plasma.services.connect import TXN as ConnectTXN
 
 
 class TXN(Enum):

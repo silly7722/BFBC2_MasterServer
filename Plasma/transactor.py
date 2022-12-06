@@ -1,6 +1,5 @@
 import gc
 from base64 import b64decode, b64encode
-from dataclasses import make_dataclass
 from enum import Enum
 
 from BFBC2_MasterServer.packet import HEADER_LENGTH, Packet

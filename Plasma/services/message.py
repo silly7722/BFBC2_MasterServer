@@ -1,13 +1,10 @@
-from datetime import datetime, timedelta
 from enum import Enum
 
-from channels.auth import database_sync_to_async, get_user, login
-from django.utils import timezone
+from channels.auth import database_sync_to_async
 
 from BFBC2_MasterServer.packet import Packet
 from BFBC2_MasterServer.service import Service
-from Plasma.error import TransactionError
-from Plasma.models import Attachment, Message, Persona
+from Plasma.models import Message, Persona
 
 
 class TXN(Enum):
