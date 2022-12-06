@@ -15,6 +15,7 @@ from Plasma.services.message import TXN as MessageTXN
 from Plasma.services.message import ExtensibleMessageService
 from Plasma.services.presence import TXN as PresenceTXN
 from Plasma.services.presence import PresenceService
+from Plasma.services.ranking import RankingService
 
 
 class TransactionService(Enum):
@@ -23,6 +24,7 @@ class TransactionService(Enum):
     AssociationService = "asso"
     ExtensibleMessageService = "xmsg"
     PresenceService = "pres"
+    RankingService = "rank"
 
 
 class TransactionKind(Enum):
@@ -70,6 +72,7 @@ class Transactor:
             TransactionService.ExtensibleMessageService
         ] = ExtensibleMessageService(connection)
         self.services[TransactionService.PresenceService] = PresenceService(connection)
+        self.services[TransactionService.RankingService] = RankingService(connection)
 
     async def get_response(self, service, message):
         """Get response from a transaction"""
