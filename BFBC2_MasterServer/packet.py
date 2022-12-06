@@ -51,6 +51,10 @@ class Packet:
         """Get value from packet"""
         return self.__data.get(key, None)
 
+    def GetKeys(self):
+        """Get all keys from packet"""
+        return self.__data.keys()
+
     def Set(self, key: str, value):
         """Set value in packet"""
         self.__data[key] = value
