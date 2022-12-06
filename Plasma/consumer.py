@@ -113,7 +113,12 @@ class PlasmaConsumer(BFBC2Consumer):
             text_data=f"Hello {self.clientString}! You are now connected to Plasma Master Server emulator (as {'client' if self.clientType == ClientType.CLIENT else 'server'}). Have fun!"
         )
 
-        if self.clientVersion != version.parse("1.0"):
+        if self.clientVersion == version.parse(
+            "1.0"
+        ) or self.clientVersion == version.parse("2.0"):
+            # 1.0 - client, 2.0 - server
+            pass
+        else:
             self.logger.warning(
                 f"Client version {self.clientVersion} is not officially supported by this server emulator!"
             )
