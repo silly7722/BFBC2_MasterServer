@@ -83,10 +83,16 @@ class Transactor:
             return
 
         if tid != self.tid:
-            self.connection.logger.error(
-                f"Invalid transaction id, expected {self.tid}, got {tid}. Ignoring message..."
-            )
-            return
+            if (
+                self.connection.currentlyUpdating
+                and transaction == Transaction.UpdateBracket
+            ):
+                self.tid += 1
+            else:
+                self.connection.logger.error(
+                    f"Invalid transaction id, expected {self.tid}, got {tid}. Ignoring message..."
+                )
+                return
 
         try:
             responses = self.transactions[transaction](self.connection, message)
@@ -103,4 +109,5 @@ class Transactor:
                 response.Set("TID", self.tid)
                 await self.connection.send_packet(response)
 
-        self.tid += 1
+        if not self.connection.currentlyUpdating:
+            self.tid += 1
