@@ -5,6 +5,7 @@ from Theater.transactions.create_game import create_game
 from Theater.transactions.echo import echo
 from Theater.transactions.login import login
 from Theater.transactions.update_bracket import update_bracket
+from Theater.transactions.update_game_data import update_game_data
 
 
 class Transaction(Enum):
@@ -13,6 +14,7 @@ class Transaction(Enum):
     Echo = "ECHO"
     CreateGame = "CGAM"
     UpdateBracket = "UBRA"
+    UpdateGameData = "UGAM"
 
 
 class TransactionKind(Enum):
@@ -33,6 +35,7 @@ class Transactor:
         self.transactions[Transaction.Echo] = echo
         self.transactions[Transaction.CreateGame] = create_game
         self.transactions[Transaction.UpdateBracket] = update_bracket
+        self.transactions[Transaction.UpdateGameData] = update_game_data
 
     async def finish(self, message):
         """Finish transaction started by client"""
