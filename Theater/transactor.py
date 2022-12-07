@@ -1,6 +1,7 @@
 from enum import Enum
 
 from Theater.transactions.connect import connect
+from Theater.transactions.create_game import create_game
 from Theater.transactions.echo import echo
 from Theater.transactions.login import login
 
@@ -9,6 +10,7 @@ class Transaction(Enum):
     Connect = "CONN"
     Login = "USER"
     Echo = "ECHO"
+    CreateGame = "CGAM"
 
 
 class TransactionKind(Enum):
@@ -27,6 +29,7 @@ class Transactor:
         self.transactions[Transaction.Connect] = connect
         self.transactions[Transaction.Login] = login
         self.transactions[Transaction.Echo] = echo
+        self.transactions[Transaction.CreateGame] = create_game
 
     async def finish(self, message):
         """Finish transaction started by client"""
