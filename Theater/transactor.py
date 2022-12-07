@@ -104,6 +104,9 @@ class Transactor:
 
         if responses is not None:
             async for response in responses:
+                if response is None:
+                    continue
+
                 response.service = transaction.value
                 response.kind = TransactionKind.NormalResponse.value
                 response.Set("TID", self.tid)
