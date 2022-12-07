@@ -43,4 +43,4 @@ USER bfbc2emu
 HEALTHCHECK CMD ["python", "manage.py", "healthcheck"]
 
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "BFBC2_MasterServer.asgi:application"]
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "BFBC2_MasterServer.asgi:application", "--proxy-headers"]
