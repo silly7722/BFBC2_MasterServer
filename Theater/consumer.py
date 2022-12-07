@@ -19,10 +19,20 @@ class TheaterConsumer(BFBC2Consumer):
     transactor = None
 
     persona = None
+    game = None
+    currentlyUpdating = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.transactor = Transactor(self)
+
+    async def disconnect(self, code):
+        await super().disconnect(code)
+
+        if self.game:
+            from Theater.models import Game
+
+            await Game.objects.delete_game(self.game)
 
     async def receive(self, text_data=None, bytes_data=None):
         message = await super().receive(text_data, bytes_data)
