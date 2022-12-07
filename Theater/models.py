@@ -22,3 +22,11 @@ class Lobby(models.Model):
         verbose_name="Max Games",
         help_text="Maximum number of games in the lobby",
     )
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.locale})"
+
+    class Meta:
+        verbose_name = "Lobby"
+        verbose_name_plural = "Lobbies"
+        ordering = ("id",)
