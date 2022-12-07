@@ -36,6 +36,8 @@ services:
     configs:
       - source: bfbc2emu_allowed_hosts
         target: /run/configs/allowed_hosts
+      - source: bfbc2emu_real_ip_header
+        target: /run/configs/real_ip_header
       - source: bfbc2emu_index_redirect_to
         target: /run/configs/index_redirect_to
       - source: bfbc2emu_postgres_db
@@ -68,6 +70,8 @@ networks:
 
 configs:
   bfbc2emu_allowed_hosts:
+    external: true
+  bfbc2emu_real_ip_header:
     external: true
   bfbc2emu_index_redirect_to:
     external: true
