@@ -1,17 +1,30 @@
 import logging
 
 from channels.generic.websocket import AsyncWebsocketConsumer
+from django.conf import settings
 
 from BFBC2_MasterServer.packet import Packet, PacketParseException
 
 
 class BFBC2Consumer(AsyncWebsocketConsumer):
     async def connect(self):
-        ip, port = self.scope["client"]
+        ip = None
+
+        for header in self.scope["headers"]:
+            if header[0].decode().upper() == settings.REAL_IP_HEADER:
+                ip = header[1].decode().split(",")[0].strip()
+                break
+
+        if ip is None:
+            ip, port = self.scope["client"]
+        else:
+            _, port = self.scope["client"]
+
+        self.ip = ip
 
         self.logger = logging.LoggerAdapter(
             logging.getLogger("consumer"),
-            {"path": self.scope["path"], "address": f"{ip}:{port}"},
+            {"path": self.scope["path"], "address": f"{self.ip}:{port}"},
         )
 
         self.logger.setLevel(logging.DEBUG)
