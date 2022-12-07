@@ -28,6 +28,8 @@ class Lobby(models.Model):
         help_text="Maximum number of games in the lobby",
     )
 
+    objects = LobbyManager()
+
     def __str__(self) -> str:
         return f"{self.name} ({self.locale})"
 
