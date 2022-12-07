@@ -1,7 +1,7 @@
-from enum import Enum
+from django.db.models import TextChoices
 
 
-class ClientLocale(Enum):
+class ClientLocale(TextChoices):
     English = "en_US"
     French = "fr_FR"
     German = "de"
