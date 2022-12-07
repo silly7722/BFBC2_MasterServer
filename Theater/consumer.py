@@ -1,6 +1,8 @@
 from packaging import version
 
 from BFBC2_MasterServer.consumer import BFBC2Consumer
+from Plasma.enumerators.ClientLocale import ClientLocale
+from Plasma.enumerators.ClientPlatform import ClientPlatform
 from Theater.transactor import Transactor
 
 
@@ -36,8 +38,8 @@ class TheaterConsumer(BFBC2Consumer):
         self.prot = data["protocolVersion"]
         self.prod = data["product"]
         self.vers = version.parse(data["version"])
-        self.plat = data["platform"]
-        self.locale = data["locale"]
+        self.plat = ClientPlatform(data["platform"])
+        self.locale = ClientLocale(data["locale"])
         self.sdkVersion = version.parse(data["sdkVersion"])
 
         if self.prot != 2:
