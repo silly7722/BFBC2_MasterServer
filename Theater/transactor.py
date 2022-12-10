@@ -137,6 +137,8 @@ class Transactor:
                 and transaction == Transaction.UpdateBracket
             ):
                 self.tid += 1
+            elif transaction == Transaction.Ping:
+                pass
             else:
                 self.connection.logger.error(
                     f"Invalid transaction id, expected {self.tid}, got {tid}. Ignoring message..."
@@ -156,9 +158,16 @@ class Transactor:
                 if response is None:
                     continue
 
-                response.service = transaction.value
+                if response.service is None:
+                    response.service = transaction.value
+
                 response.kind = TransactionKind.NormalResponse.value
-                response.Set("TID", self.tid)
+
+                if transaction != Transaction.Ping:
+                    response.Set("TID", self.tid)
+                else:
+                    response.Set("TID", 0)
+
                 await self.connection.send_packet(response)
 
         if not self.connection.currentlyUpdating:
