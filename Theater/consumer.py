@@ -1,3 +1,5 @@
+from channels.layers import get_channel_layer
+from django.core.cache import cache
 from packaging import version
 
 from BFBC2_MasterServer.consumer import BFBC2Consumer
@@ -31,6 +33,9 @@ class TheaterConsumer(BFBC2Consumer):
 
         if self.game:
             from Theater.models import Game
+
+            cache.delete(f"serverSession:{self.game.id}")
+            cache.delete(f"nextServerPlayerID:{self.game.id}")
 
             await Game.objects.delete_game(self.game)
 
