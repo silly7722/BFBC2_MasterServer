@@ -15,4 +15,3 @@ def echo(connection, message):
     response.Set("TID", message.Get("TID"))
 
     yield response
-    return

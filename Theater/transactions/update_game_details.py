@@ -21,4 +21,3 @@ async def update_game_details(connection, message):
         await Game.objects.update_game(connection.game, key, message.Get(key))
 
     yield
-    return

@@ -34,4 +34,3 @@ async def connect(connection, message):
     response.Set("PROT", prot)
 
     yield response
-    return

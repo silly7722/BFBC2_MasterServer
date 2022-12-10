@@ -1,6 +1,7 @@
-from BFBC2_MasterServer.packet import Packet
 from channels.auth import database_sync_to_async
 from django.core.cache import cache
+
+from BFBC2_MasterServer.packet import Packet
 from Plasma.models import Persona
 
 
@@ -43,4 +44,3 @@ async def login(connection, message):
     response.Set("NAME", persona.name)
 
     yield response
-    return

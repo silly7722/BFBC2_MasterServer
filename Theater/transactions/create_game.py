@@ -32,4 +32,3 @@ async def create_game(connection, message):
     connection.game = gameObj
 
     yield response
-    return

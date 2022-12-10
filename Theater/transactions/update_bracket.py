@@ -5,4 +5,3 @@ async def update_bracket(connection, message):
     connection.currentlyUpdating = message.Get("START")
 
     yield Packet()
-    return
