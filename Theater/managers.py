@@ -7,7 +7,7 @@ from django.db import models
 
 class LobbyManager(models.Manager):
     @sync_to_async
-    def get_lobby(self, lid, locale, platform):
+    def get_lobby(self, lid, locale=None, platform=None):
         if lid == -1:
             lobbyNameBase = f"bfbc2{platform.value}"
             lobbyName = lobbyNameBase
