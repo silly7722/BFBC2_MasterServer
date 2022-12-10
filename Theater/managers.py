@@ -36,7 +36,7 @@ class GameManager(models.Manager):
         game = self.create(
             lobby=lobby,
             owner=owner,
-            name=data.Get("NAME"),
+            name=data.Get("NAME").lstrip('"').rstrip('"'),
             addrIp=address[0],
             addrPort=address[1],
             platform=clientPlatform,
@@ -77,6 +77,9 @@ class GameManager(models.Manager):
 
     @sync_to_async
     def update_game(self, game, key, value):
+        if isinstance(value, str):
+            value = value.lstrip('"').rstrip('"')
+
         match key:
             case "NAME":
                 game.name = value
@@ -124,8 +127,8 @@ class GameManager(models.Manager):
                 game.gameRegion = value
             case "B-version":
                 game.serverVersion = value
-            case "B-U-Public":
-                game.serverPublic = value
+            case "B-U-public":
+                game.gamePublic = value
             case "B-U-elo":
                 game.gameElo = value
             case "B-numObservers":
@@ -137,7 +140,7 @@ class GameManager(models.Manager):
             case "B-U-hash":
                 game.gameHash = value
             case "B-U-Provider":
-                game.serverProvider = value
+                game.providerId = value
             case "D-AutoBalance":
                 game.gameAutoBalance = value
             case "D-BannerUrl":
