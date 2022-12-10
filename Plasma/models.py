@@ -235,6 +235,7 @@ class AssociationType(models.IntegerChoices):
     BLOCK = 2
     FRIENDS = 3
     RECENT_PLAYERS = 4
+    DOGTAGS = 5
 
 
 class Assocation(models.Model):

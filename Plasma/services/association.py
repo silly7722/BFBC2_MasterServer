@@ -47,6 +47,8 @@ class AssociationService(Service):
                 return AssociationType.FRIENDS
             case "PlasmaRecentPlayers":
                 return AssociationType.RECENT_PLAYERS
+            case "dogtags":
+                return AssociationType.DOGTAGS
 
         return None
 
