@@ -241,7 +241,7 @@ class Game(models.Model):
     )
 
     providerId = models.TextField(
-        null=True,
+        default="",
         verbose_name="Provider ID",
         help_text="Provider ID of the server",
     )
@@ -250,7 +250,7 @@ class Game(models.Model):
     )
 
     punkBusterVersion = models.TextField(
-        null=True,
+        default="v1.905 | A1382 C2.305",
         verbose_name="Punkbuster Version",
         help_text="Punkbuster version of the server",
     )
