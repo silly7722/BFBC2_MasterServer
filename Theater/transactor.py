@@ -7,6 +7,7 @@ from Theater.transactions.enter_game_host_response import enter_game_host_respon
 from Theater.transactions.enter_game_request import enter_game_request
 from Theater.transactions.get_game_details import get_game_details
 from Theater.transactions.get_game_list import get_game_list
+from Theater.transactions.get_lobby_list import get_lobby_list
 from Theater.transactions.login import login
 from Theater.transactions.ping import ping
 from Theater.transactions.update_bracket import update_bracket
@@ -18,6 +19,7 @@ class Transaction(Enum):
     Connect = "CONN"
     Login = "USER"
     Echo = "ECHO"
+    GetLobbyList = "LLST"
     GetGameList = "GLST"
     GetGameDetails = "GDAT"
     CreateGame = "CGAM"
@@ -44,7 +46,7 @@ class Transactor:
 
         self.transactions[Transaction.Connect] = connect
         self.transactions[Transaction.Login] = login
-        self.transactions[Transaction.Echo] = echo
+        self.transactions[Transaction.GetLobbyList] = get_lobby_list
         self.transactions[Transaction.GetGameList] = get_game_list
         self.transactions[Transaction.GetGameDetails] = get_game_details
         self.transactions[Transaction.CreateGame] = create_game
