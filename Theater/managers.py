@@ -27,6 +27,25 @@ class LobbyManager(models.Manager):
         else:
             return self.get(id=lid)
 
+    @sync_to_async
+    def get_lobbies(self):
+        from Theater.models import Game
+
+        lobby_data = []
+
+        for lobby in self.all():
+            lobby_data.append(
+                {
+                    "lid": lobby.id,
+                    "name": lobby.name,
+                    "numGames": Game.objects.filter(lobby=lobby).count(),
+                    "locale": lobby.locale,
+                    "maxGames": lobby.maxGames,
+                }
+            )
+
+        return lobby_data
+
 
 class GameManager(models.Manager):
     @sync_to_async
