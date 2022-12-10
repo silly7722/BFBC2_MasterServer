@@ -88,3 +88,23 @@ class TheaterConsumer(BFBC2Consumer):
             )
 
         self.initialized = True
+
+    async def external_send(self, event):
+        message = event["message"]
+        await self.transactor.start(message["service"], message["data"])
+
+    async def send_remotely_to_server(self, target, serviceStr, data):
+        active_session = cache.get(f"serverSession:{target}")
+        channel_layer = get_channel_layer()
+
+        if active_session:
+            await channel_layer.send(
+                active_session,
+                {
+                    "type": "external.send",
+                    "message": {
+                        "service": serviceStr,
+                        "data": data,
+                    },
+                },
+            )
