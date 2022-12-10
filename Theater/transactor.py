@@ -8,6 +8,7 @@ from Theater.transactions.enter_game_request import enter_game_request
 from Theater.transactions.get_game_details import get_game_details
 from Theater.transactions.get_game_list import get_game_list
 from Theater.transactions.get_lobby_list import get_lobby_list
+from Theater.transactions.leave_game import leave_game
 from Theater.transactions.login import login
 from Theater.transactions.ping import ping
 from Theater.transactions.update_bracket import update_bracket
@@ -28,6 +29,7 @@ class Transaction(Enum):
     UpdateGameDetails = "UGDE"
     EnterGameRequest = "EGAM"
     EnterGameHostResponse = "EGRS"
+    LeaveGame = "ECNL"
     Ping = "PING"
 
 
@@ -55,6 +57,7 @@ class Transactor:
         self.transactions[Transaction.UpdateGameDetails] = update_game_details
         self.transactions[Transaction.EnterGameRequest] = enter_game_request
         self.transactions[Transaction.EnterGameHostResponse] = enter_game_host_response
+        self.transactions[Transaction.LeaveGame] = leave_game
         self.transactions[Transaction.Ping] = ping
 
     async def finish(self, message):
