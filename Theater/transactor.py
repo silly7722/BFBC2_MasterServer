@@ -4,6 +4,7 @@ from Theater.transactions.connect import connect
 from Theater.transactions.create_game import create_game
 from Theater.transactions.echo import echo
 from Theater.transactions.login import login
+from Theater.transactions.ping import ping
 from Theater.transactions.update_bracket import update_bracket
 from Theater.transactions.update_game_data import update_game_data
 from Theater.transactions.update_game_details import update_game_details
@@ -17,6 +18,7 @@ class Transaction(Enum):
     UpdateBracket = "UBRA"
     UpdateGameData = "UGAM"
     UpdateGameDetails = "UGDE"
+    Ping = "PING"
 
 
 class TransactionKind(Enum):
@@ -39,6 +41,7 @@ class Transactor:
         self.transactions[Transaction.UpdateBracket] = update_bracket
         self.transactions[Transaction.UpdateGameData] = update_game_data
         self.transactions[Transaction.UpdateGameDetails] = update_game_details
+        self.transactions[Transaction.Ping] = ping
 
     async def finish(self, message):
         """Finish transaction started by client"""
