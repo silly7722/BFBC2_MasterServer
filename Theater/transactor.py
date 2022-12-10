@@ -11,6 +11,7 @@ from Theater.transactions.get_lobby_list import get_lobby_list
 from Theater.transactions.leave_game import leave_game
 from Theater.transactions.login import login
 from Theater.transactions.ping import ping
+from Theater.transactions.player_entered import player_entered
 from Theater.transactions.update_bracket import update_bracket
 from Theater.transactions.update_game_data import update_game_data
 from Theater.transactions.update_game_details import update_game_details
@@ -29,6 +30,7 @@ class Transaction(Enum):
     UpdateGameDetails = "UGDE"
     EnterGameRequest = "EGAM"
     EnterGameHostResponse = "EGRS"
+    PlayerEntered = "PENT"
     LeaveGame = "ECNL"
     Ping = "PING"
 
@@ -57,6 +59,7 @@ class Transactor:
         self.transactions[Transaction.UpdateGameDetails] = update_game_details
         self.transactions[Transaction.EnterGameRequest] = enter_game_request
         self.transactions[Transaction.EnterGameHostResponse] = enter_game_host_response
+        self.transactions[Transaction.PlayerEntered] = player_entered
         self.transactions[Transaction.LeaveGame] = leave_game
         self.transactions[Transaction.Ping] = ping
 
