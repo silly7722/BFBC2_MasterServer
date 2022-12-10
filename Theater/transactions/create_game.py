@@ -1,5 +1,7 @@
 from ipaddress import ip_address
 
+from django.core.cache import cache
+
 from BFBC2_MasterServer.packet import Packet
 from Theater.models import Game, Lobby
 
@@ -30,5 +32,6 @@ async def create_game(connection, message):
         response.Set(key, gameData[key])
 
     connection.game = gameObj
+    cache.set(f"serverSession:{gameData['GID']}", connection.channel_name)
 
     yield response
