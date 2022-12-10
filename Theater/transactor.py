@@ -1,5 +1,7 @@
+import logging
 from enum import Enum
 
+from BFBC2_MasterServer.packet import Packet
 from Theater.transactions.connect import connect
 from Theater.transactions.create_game import create_game
 from Theater.transactions.echo import echo
@@ -17,6 +19,8 @@ from Theater.transactions.update_bracket import update_bracket
 from Theater.transactions.update_game_data import update_game_data
 from Theater.transactions.update_game_details import update_game_details
 
+logger = logging.getLogger(__name__)
+
 
 class Transaction(Enum):
     Connect = "CONN"
@@ -30,6 +34,7 @@ class Transaction(Enum):
     UpdateGameData = "UGAM"
     UpdateGameDetails = "UGDE"
     EnterGameRequest = "EGAM"
+    EnterGameHostRequest = "EGRQ"
     EnterGameHostResponse = "EGRS"
     PlayerEntered = "PENT"
     PlayerExited = "PLVT"
@@ -46,6 +51,8 @@ class Transactor:
 
     tid = 0  # Transaction ID
     transactions = {}
+
+    allowed_remote_transactions = [Transaction.EnterGameHostRequest]
 
     def __init__(self, connection):
         self.connection = connection
@@ -65,6 +72,22 @@ class Transactor:
         self.transactions[Transaction.PlayerExited] = player_exited
         self.transactions[Transaction.LeaveGame] = leave_game
         self.transactions[Transaction.Ping] = ping
+        self.transactions[Transaction.Echo] = echo
+
+    async def start(self, service, data):
+        service = Transaction(service)
+
+        if service not in self.allowed_remote_transactions:
+            logger.error(f"Transaction {service} is not allowed to be sent remotely")
+
+        packet = Packet()
+        packet.service = service.value
+        packet.kind = TransactionKind.NormalResponse.value
+
+        for key in data:
+            packet.Set(key, data[key])
+
+        await self.connection.send_packet(packet)
 
     async def finish(self, message):
         """Finish transaction started by client"""
