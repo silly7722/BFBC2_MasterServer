@@ -18,6 +18,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "BFBC2_MasterServer.settings")
 django_asgi_app = get_asgi_application()
 
 from Plasma.urls import websocket_urlpatterns as plasma_websocket_urlpatterns
+from Theater.models import Lobby
 from Theater.urls import websocket_urlpatterns as theater_websocket_urlpatterns
 
 application = ProtocolTypeRouter(
@@ -28,3 +29,6 @@ application = ProtocolTypeRouter(
         ),
     }
 )
+
+# Remove all lobbies on server start
+Lobby.objects.all().delete()
