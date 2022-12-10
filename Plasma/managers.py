@@ -54,6 +54,10 @@ class UserManager(BaseUserManager):
     def get_user_by_nuid(self, nuid):
         return self.filter(nuid=nuid).first()
 
+    @sync_to_async
+    def get_user_by_id(self, id):
+        return self.filter(id=id).first()
+
 
 class EntitlementManager(models.Manager):
     async def is_entitled_for_game(self, user, game_id):

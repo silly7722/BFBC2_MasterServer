@@ -24,7 +24,7 @@ from BFBC2_MasterServer.tools import legacy_b64encode
 from Plasma.enumerators.ActivationResult import ActivationResult
 from Plasma.enumerators.ClientType import ClientType
 from Plasma.error import TransactionError
-from Plasma.models import Entitlement, Persona
+from Plasma.models import Account, Entitlement, Persona
 
 
 class TXN(Enum):
@@ -955,8 +955,16 @@ class AccountService(Service):
     async def __handle_get_entitlements(self, data):
         """Get the list of entitlements"""
 
-        user = await get_user(self.connection.scope)
+        if self.connection.clientType == ClientType.SERVER:
+            uid = data.Get("masterUserId")
+            user = await Account.objects.get_user_by_id(uid)
+        else:
+            user = await get_user(self.connection.scope)
+
         groupName = data.Get("groupName")
+
+        if not groupName:
+            groupName = "BFBC2PC"
 
         entitlements = await Entitlement.objects.list_entitlements(user, groupName)
 
