@@ -3,6 +3,7 @@ from enum import Enum
 from Theater.transactions.connect import connect
 from Theater.transactions.create_game import create_game
 from Theater.transactions.echo import echo
+from Theater.transactions.enter_game_host_response import enter_game_host_response
 from Theater.transactions.login import login
 from Theater.transactions.ping import ping
 from Theater.transactions.update_bracket import update_bracket
@@ -18,6 +19,7 @@ class Transaction(Enum):
     UpdateBracket = "UBRA"
     UpdateGameData = "UGAM"
     UpdateGameDetails = "UGDE"
+    EnterGameHostResponse = "EGRS"
     Ping = "PING"
 
 
@@ -41,6 +43,7 @@ class Transactor:
         self.transactions[Transaction.UpdateBracket] = update_bracket
         self.transactions[Transaction.UpdateGameData] = update_game_data
         self.transactions[Transaction.UpdateGameDetails] = update_game_details
+        self.transactions[Transaction.EnterGameHostResponse] = enter_game_host_response
         self.transactions[Transaction.Ping] = ping
 
     async def finish(self, message):
