@@ -184,3 +184,178 @@ class GameManager(models.Manager):
                 game.pdat = value
 
         game.save()
+
+    @sync_to_async
+    def get_games(self, lobby, gameType, gameMod, count, minGID):
+        filtered_games = self.filter(
+            id__gt=minGID, lobby=lobby, gameType=gameType, gameMod=gameMod
+        )[:count]
+
+        games = []
+
+        for game in filtered_games:
+            game_data = {
+                "LID": game.lobby.id,
+                "GID": game.id,
+                "N": game.name,
+                "AP": game.activePlayers,
+                "JP": game.joiningPlayers,
+                "QP": game.queuedPlayers,
+                "MP": game.maxPlayers,
+                "F": 0,  # Is Player Favorite
+                "NF": 0,  # Favorite Player Count
+                "HU": game.owner.id,
+                "HN": game.owner.name,
+                "I": game.addrIp,
+                "P": game.addrPort,
+                "J": game.joinMode,
+                "PL": game.platform,
+                "PW": int(game.isPasswordRequired),
+                "V": game.clientVersion,
+                "TYPE": game.gameType,
+                "B-numObservers": game.numObservers,
+                "B-maxObservers": game.maxObservers,
+                "B-version": game.serverVersion,
+                "B-U-region": game.gameRegion,
+                "B-U-level": game.gameLevel,
+                "B-U-elo": game.gameElo,
+                "B-U-Softcore": int(game.serverSoftcore),
+                "B-U-Hardcore": int(game.serverHardcore),
+                "B-U-EA": int(game.serverEA),
+                "B-U-HasPassword": int(game.serverHasPassword),
+                "B-U-public": int(game.gamePublic),
+                "B-U-QueueLength": game.queueLength,
+                "B-U-gameMod": game.gameMod,
+                "B-U-gamemode": game.gameMode,
+                "B-U-region": game.gameRegion,
+                "B-U-sguid": game.gameSGUID,
+                "B-U-Provider": game.providerId,
+                "B-U-Time": game.gameTime,
+                "B-U-hash": game.gameHash,
+                "B-U-Punkbuster": int(game.serverPunkbuster),
+            }
+
+            if game_data["B-U-Punkbuster"]:
+                game_data["B-U-PunkBusterVersion"] = game.punkBusterVersion
+
+            games.append(game_data)
+
+        return games
+
+    @sync_to_async
+    def get_lobby_games_count(self, lobby):
+        return self.filter(lobby=lobby).count()
+
+    @sync_to_async
+    def get_game(self, lobby_id, game_id):
+        return self.get(lobby_id=lobby_id, id=game_id)
+
+    @sync_to_async
+    def get_game_data(self, lobby_id, game_id):
+        game = self.get(lobby_id=lobby_id, id=game_id)
+
+        game_data = {
+            "LID": game.lobby.id,
+            "GID": game.id,
+            "N": game.name,
+            "AP": game.activePlayers,
+            "JP": game.joiningPlayers,
+            "QP": game.queuedPlayers,
+            "MP": game.maxPlayers,
+            "HU": game.owner.id,
+            "HN": game.owner.name,
+            "I": game.addrIp,
+            "P": game.addrPort,
+            "J": game.joinMode,
+            "PL": game.platform,
+            "PW": int(game.isPasswordRequired),
+            "V": game.clientVersion,
+            "TYPE": game.gameType,
+            "B-numObservers": game.numObservers,
+            "B-maxObservers": game.maxObservers,
+            "B-version": game.serverVersion,
+            "B-U-region": game.gameRegion,
+            "B-U-level": game.gameLevel,
+            "B-U-elo": game.gameElo,
+            "B-U-Softcore": int(game.serverSoftcore),
+            "B-U-Hardcore": int(game.serverHardcore),
+            "B-U-EA": int(game.serverEA),
+            "B-U-HasPassword": int(game.serverHasPassword),
+            "B-U-public": int(game.gamePublic),
+            "B-U-QueueLength": game.queueLength,
+            "B-U-gameMod": game.gameMod,
+            "B-U-gamemode": game.gameMode,
+            "B-U-region": game.gameRegion,
+            "B-U-sguid": game.gameSGUID,
+            "B-U-Provider": game.providerId,
+            "B-U-Time": game.gameTime,
+            "B-U-hash": game.gameHash,
+            "B-U-Punkbuster": int(game.serverPunkbuster),
+        }
+
+        return game_data
+
+    @sync_to_async
+    def get_game_details(self, lobby_id, game_id):
+        game = self.get(lobby_id=lobby_id, id=game_id)
+
+        game_details = {
+            "LID": game.lobby.id,
+            "GID": game.id,
+            "D-AutoBalance": int(game.gameAutoBalance),
+            "D-Crosshair": int(game.gameCrosshair),
+            "D-FriendlyFire": int(game.gameFriendlyFire),
+            "D-KillCam": int(game.gameKillCam),
+            "D-Minimap": int(game.gameMinimap),
+            "D-MinimapSpotting": int(game.gameMinimapSpotting),
+            "D-ThirdPersonVehicleCameras": int(game.gameThirdPersonVehicleCameras),
+            "D-ThreeDSpotting": int(game.gameThreeDSpotting),
+            "UGID": game.ugid,
+        }
+
+        serverDescription = game.gameDescription
+
+        if serverDescription:
+            game_details["D-ServerDescription0"] = serverDescription
+            game_details["D-ServerDescriptionCount"] = 1
+        else:
+            game_details["D-ServerDescriptionCount"] = 0
+
+        if game.gameBannerUrl:
+            game_details["D-BannerUrl"] = game.gameBannerUrl
+
+        pdat = game.pdat.split("|")
+        pdat_chunks = []
+
+        temp_pdat = ""
+        temp_id = 0
+
+        for pid in pdat:
+            temp_pdat += "|" + pid
+            temp_id += 1
+
+            if temp_id == 3:
+                pdat_chunks.append(temp_pdat)
+                temp_pdat = ""
+                temp_id = 0
+
+        for i, chunk in enumerate(pdat_chunks):
+            game_details["D-pdat{}".format(i)] = chunk
+
+        return game_details
+
+    @sync_to_async
+    def get_game_owner(self, lobby_id, game_id):
+        return self.get(lobby_id=lobby_id, id=game_id).owner
+
+    @sync_to_async
+    def increment_joining_players(self, lobby_id, game_id):
+        game = self.get(lobby_id=lobby_id, id=game_id)
+        game.joiningPlayers += 1
+        game.save()
+
+    @sync_to_async
+    def decrement_active_players(self, lobby_id, game_id):
+        game = self.get(lobby_id=lobby_id, id=game_id)
+        game.activePlayers -= 1
+        game.save()
