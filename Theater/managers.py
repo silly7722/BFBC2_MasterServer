@@ -174,14 +174,10 @@ class GameManager(models.Manager):
                 game.gameMinimap = value
             case "D-MinimapSpotting":
                 game.gameMinimapSpotting = value
-            case "D-ServerDescription0":
-                game.gameDescription = value
             case "D-ThirdPersonVehicleCameras":
                 game.gameThirdPersonVehicleCameras = value
             case "D-ThreeDSpotting":
                 game.gameThreeDSpotting = value
-            case "D-pdat":
-                game.pdat = value
 
         game.save()
 
@@ -297,6 +293,8 @@ class GameManager(models.Manager):
 
     @sync_to_async
     def get_game_details(self, lobby_id, game_id):
+        from Theater.models import GameDescription, PlayerData
+
         game = self.get(lobby_id=lobby_id, id=game_id)
 
         game_details = {
@@ -313,34 +311,22 @@ class GameManager(models.Manager):
             "UGID": game.ugid,
         }
 
-        serverDescription = game.gameDescription
+        serverDescriptions = GameDescription.objects.filter(owner=game)
+        game_details["D-ServerDescriptionCount"] = serverDescriptions.count()
 
-        if serverDescription:
-            game_details["D-ServerDescription0"] = serverDescription
-            game_details["D-ServerDescriptionCount"] = 1
-        else:
-            game_details["D-ServerDescriptionCount"] = 0
+        for i, serverDescription in enumerate(serverDescriptions):
+            game_details[f"D-ServerDescription{i}"] = serverDescription.text
 
         if game.gameBannerUrl:
             game_details["D-BannerUrl"] = game.gameBannerUrl
 
-        pdat = game.pdat.split("|")
-        pdat_chunks = []
+        for i in range(game.maxPlayers):
+            pdat = PlayerData.objects.filter(owner=game, index=i + 1).first()
 
-        temp_pdat = ""
-        temp_id = 0
-
-        for pid in pdat:
-            temp_pdat += "|" + pid
-            temp_id += 1
-
-            if temp_id == 3:
-                pdat_chunks.append(temp_pdat)
-                temp_pdat = ""
-                temp_id = 0
-
-        for i, chunk in enumerate(pdat_chunks):
-            game_details["D-pdat{}".format(i)] = chunk
+            if game.maxPlayers < 10:
+                game_details[f"D-pdat{i}"] = pdat.data
+            else:
+                game_details[f"D-pdat{i:02}"] = pdat.data
 
         return game_details
 
