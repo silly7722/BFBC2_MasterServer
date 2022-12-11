@@ -571,6 +571,13 @@ class RankingManager(models.Manager):
 
         return personas
 
+    @sync_to_async
+    def update_stat(self, personaId, key, value):
+        from Plasma.models import Persona
+
+        persona = Persona.objects.get(id=personaId)
+        self.update_or_create(persona=persona, key=key, value=value)
+
 
 class RecordManager(models.Manager):
     @sync_to_async
