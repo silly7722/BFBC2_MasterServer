@@ -955,18 +955,18 @@ class AccountService(Service):
     async def __handle_get_entitlements(self, data):
         """Get the list of entitlements"""
 
+        groupName = data.Get("groupName")
+        entitlementTag = data.Get("entitlementTag")
+
         if self.connection.clientType == ClientType.SERVER:
             uid = data.Get("masterUserId")
             user = await Account.objects.get_user_by_id(uid)
         else:
             user = await get_user(self.connection.scope)
 
-        groupName = data.Get("groupName")
-
-        if not groupName:
-            groupName = "BFBC2PC"
-
-        entitlements = await Entitlement.objects.list_entitlements(user, groupName)
+        entitlements = await Entitlement.objects.list_entitlements(
+            user, groupName=groupName, entitlementTag=entitlementTag
+        )
 
         response = Packet()
         response.Set("entitlements", entitlements)

@@ -82,13 +82,18 @@ class EntitlementManager(models.Manager):
             return await sync_to_async(timed_entitlements.exists)()
 
     @sync_to_async
-    def list_entitlements(self, user, groupName):
+    def list_entitlements(self, user, groupName=None, entitlementTag=None):
         filtered_entitlements = self.filter(
             account=user,
-            groupName=groupName,
             grantDate__lt=timezone.now(),
             isGameEntitlement=False,
         )
+
+        if groupName:
+            filtered_entitlements = filtered_entitlements.filter(groupName=groupName)
+
+        if entitlementTag:
+            filtered_entitlements = filtered_entitlements.filter(tag=entitlementTag)
 
         never_expires = filtered_entitlements.filter(terminationDate=None)
         entitlements = []
