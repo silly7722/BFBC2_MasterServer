@@ -12,6 +12,7 @@ import os
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
+from django.db.utils import ProgrammingError
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "BFBC2_MasterServer.settings")
 
@@ -30,5 +31,8 @@ application = ProtocolTypeRouter(
     }
 )
 
-# Remove all lobbies on server start
-Lobby.objects.all().delete()
+try:
+    # Remove all lobbies on server start
+    Lobby.objects.all().delete()
+except ProgrammingError:
+    pass
