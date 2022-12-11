@@ -5,7 +5,12 @@ from Plasma.enumerators.ClientPlatform import ClientPlatform
 from Plasma.models import Persona
 from Theater.enumerators.GameType import GameType
 from Theater.enumerators.JoinMode import JoinMode
-from Theater.managers import GameManager, LobbyManager
+from Theater.managers import (
+    GameDescriptionManager,
+    GameManager,
+    LobbyManager,
+    PlayerDataManager,
+)
 
 
 # Create your models here.
@@ -277,3 +282,19 @@ class Game(models.Model):
         verbose_name = "Game"
         verbose_name_plural = "Games"
         ordering = ("id",)
+
+
+class GameDescription(models.Model):
+    owner = models.ForeignKey(Game, on_delete=models.CASCADE)
+    index = models.IntegerField()
+    text = models.TextField(null=True)
+
+    objects = GameDescriptionManager()
+
+
+class PlayerData(models.Model):
+    owner = models.ForeignKey(Game, on_delete=models.CASCADE)
+    index = models.IntegerField()
+    data = models.TextField(null=True, default="|0|0|0|0")
+
+    objects = PlayerDataManager()

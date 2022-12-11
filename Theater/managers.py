@@ -359,3 +359,25 @@ class GameManager(models.Manager):
         game = self.get(lobby_id=lobby_id, id=game_id)
         game.activePlayers -= 1
         game.save()
+
+
+class PlayerDataManager(models.Manager):
+    @sync_to_async
+    def update_player_data(self, game, index, pdat):
+        game = self.get_or_create(owner=game, index=index + 1)[0]
+        game.data = pdat
+        game.save()
+
+
+class GameDescriptionManager(models.Manager):
+    @sync_to_async
+    def set_game_description_count(self, game, count):
+        # Reduce the number of description objects to the new count
+        self.filter(owner=game)[count:].delete()
+
+    @sync_to_async
+    def set_game_description(self, game, index, text):
+        # Get or create the description object
+        description = self.get_or_create(owner=game, index=index)[0]
+        description.text = text
+        description.save()
