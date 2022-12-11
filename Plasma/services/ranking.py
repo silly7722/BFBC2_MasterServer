@@ -2,6 +2,7 @@ from enum import Enum
 
 from BFBC2_MasterServer.packet import Packet
 from BFBC2_MasterServer.service import Service
+from Plasma.enumerators.StatUpdateType import StatUpdateType
 from Plasma.models import Ranking
 
 
@@ -41,8 +42,29 @@ class RankingService(Service):
         return self.creator_map[TXN(txn)]
 
     async def __handle_update_stats(self, data):
-        # TODO: Implement it
-        raise NotImplementedError("UpdateStats not implemented (yet)")
+        """Update stats"""
+
+        for userData in data.Get("u"):
+            ownerId = userData["o"]
+            stats = userData["s"]
+
+            for statID in stats:
+                if statID == "[]":
+                    continue
+
+                statData = stats[statID]
+
+                updateType = StatUpdateType(statData["ut"])
+                statKey = statData["k"]
+                statValue = float(statData["v"])
+
+                if updateType == StatUpdateType.RelativeValue:
+                    oldValue = await Ranking.objects.get_stat_by_id(ownerId, statKey)
+                    statValue = oldValue + statValue
+
+                await Ranking.objects.update_stat(ownerId, statKey, statValue)
+
+        return Packet()
 
     async def __handle_get_stats(self, data):
         """Get stats for a current persona"""
