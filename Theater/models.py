@@ -177,6 +177,7 @@ class Game(models.Model):
     )
 
     gameBannerUrl = models.TextField(
+        blank=True,
         null=True,
         verbose_name="Game Banner URL",
         help_text="URL of the game banner",
@@ -224,14 +225,6 @@ class Game(models.Model):
         help_text="Is the 3D spotting enabled?",
     )
 
-    gameDescription = models.TextField(
-        null=True,
-        verbose_name="Game Description",
-        help_text="Description of the game",
-    )
-
-    pdat = models.TextField(verbose_name="Player Data")
-
     numObservers = models.IntegerField(
         verbose_name="Game Observers", help_text="Number of observers in the server"
     )
@@ -250,12 +243,14 @@ class Game(models.Model):
     )
 
     punkBusterVersion = models.TextField(
-        default="v1.905 | A1382 C2.305",
+        blank=True,
+        null=True,
         verbose_name="Punkbuster Version",
         help_text="Punkbuster version of the server",
     )
 
     ugid = models.CharField(
+        blank=True,
         max_length=16,
         verbose_name="UGID",
         help_text="UGID of the server",
