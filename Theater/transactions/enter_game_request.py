@@ -33,7 +33,7 @@ async def enter_game_request(connection, message):
     ticket = "".join(random.choices(string.digits, k=10))
 
     # pid is the unique player id on the game server
-    pid = cache.get_or_set(f"nextServerPlayerID:{gid}", 0)
+    pid = cache.get_or_set(f"nextServerPlayerID:{gid}", 0, timeout=None)
     cache.incr(f"nextServerPlayerID:{gid}")
 
     # Sent "Enter Game Host Request" to the game server
