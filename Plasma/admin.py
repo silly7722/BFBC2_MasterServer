@@ -7,6 +7,7 @@ from Plasma.models import (
     Assocation,
     Attachment,
     Entitlement,
+    EntitlementTarget,
     Message,
     Persona,
     Ranking,
@@ -132,6 +133,22 @@ class EntitlementAdmin(admin.ModelAdmin):
         "isGameEntitlement",
     )
 
+class EntitlementTargetAdmin(admin.ModelAdmin):
+    list_display = [
+        "id",
+        "tag",
+        "game",
+        "group",
+        "product",
+        "duration",
+    ]
+    list_filter = (
+        "tag",
+        "game",
+        "group",
+        "product",
+        "duration",
+    )
 
 class SerialKeyAdmin(admin.ModelAdmin):
     list_display = [
@@ -203,6 +220,7 @@ class RankingAdmin(admin.ModelAdmin):
 
 admin.site.register(Account, AccountAdmin)
 admin.site.register(Entitlement, EntitlementAdmin)
+admin.site.register(EntitlementTarget, EntitlementTargetAdmin)
 admin.site.register(SerialKey, SerialKeyAdmin)
 admin.site.register(Persona, PersonaAdmin)
 admin.site.register(Assocation, AssocationAdmin)

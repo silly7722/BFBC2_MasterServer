@@ -122,6 +122,10 @@ class EntitlementManager(models.Manager):
             }
             for entitlement in entitlements
         ]
+    
+    @sync_to_async
+    def get_key_targets(self, key):
+        return list(key.targets.all())
 
     async def activate_key(self, user, key):
         from Plasma.models import SerialKey
@@ -136,41 +140,38 @@ class EntitlementManager(models.Manager):
         if key.is_used:
             return ActivationResult.ALREADY_USED, []
 
-        encoded_targets = key.targets.split(";")
+        targets = await self.get_key_targets(key)
         activated_list = []
 
-        for target in encoded_targets:
-            decoded_target = b64decode(target).decode("utf-8")
-            target = json.loads(decoded_target)
-
+        for target in targets:
             current_entitlements = await self.list_entitlements(
-                user, target.get("group")
+                user, target.group
             )
             already_entitled = False
 
             for entitlement in current_entitlements:
-                if entitlement["entitlementTag"] == target.get("tag"):
+                if entitlement["entitlementTag"] == target.tag:
                     already_entitled = True
                     break
 
             if already_entitled:
                 continue
 
-            terminationDate = target.get("terminateAfter")
+            duration = target.duration
 
-            if terminationDate:
-                terminationDate = timezone.now() + timezone.timedelta(
-                    seconds=terminationDate
+            if duration:
+                duration = timezone.now() + timezone.timedelta(
+                    seconds=duration
                 )
 
             activated_entitlement = await sync_to_async(self.create)(
                 account=user,
-                tag=target.get("tag"),
-                groupName=target.get("group"),
-                productId=target.get("product"),
+                tag=target.tag,
+                groupName=target.group,
+                productId=target.product,
                 grantDate=timezone.now(),
-                terminationDate=terminationDate,
-                isGameEntitlement=target.get("game", False),
+                terminationDate=duration,
+                isGameEntitlement=target.game,
             )
 
             activated_list.append(activated_entitlement)

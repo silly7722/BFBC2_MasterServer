@@ -178,13 +178,40 @@ class Entitlement(models.Model):
         verbose_name_plural = "Entitlements"
         ordering = ("id",)
 
+class EntitlementTarget(models.Model):
+    tag = models.CharField(max_length=255, verbose_name="Entitlement Tag")
+
+    game = models.BooleanField(default=False, verbose_name="Game Entitlement", help_text="Is game entitlement?")
+
+    group = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="Group Name",
+        help_text="Name of the group this entitlement grants access to.",
+    )
+
+    product = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="Product ID",
+        help_text="ID of the product this entitlement grants access to.",
+    )
+
+    duration = models.DurationField(null=True, blank=True, verbose_name="Entitlement Duration", help_text="How long this entitlement will last?")
+
+    def __str__(self) -> str:
+        return f"{self.tag} ({self.id})"
+
+    class Meta:
+        verbose_name = "Entitlement Target"
+        verbose_name_plural = "Entitlement Targets"
+        ordering = ("id",)
 
 class SerialKey(models.Model):
     key = models.CharField(max_length=255, verbose_name="Serial Key", unique=True)
-    targets = models.TextField(
-        verbose_name="Targets",
-        help_text="What this key activates. (Semicolon seperated)",
-    )
+    targets = models.ManyToManyField(EntitlementTarget, related_name="entitlement_target")
 
     is_used = models.BooleanField(
         default=False, verbose_name="Is Used", help_text="Is this key already used?"
