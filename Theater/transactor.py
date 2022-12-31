@@ -4,6 +4,7 @@ from enum import Enum
 from BFBC2_MasterServer.packet import Packet
 from Theater.transactions.connect import connect
 from Theater.transactions.create_game import create_game
+from Theater.transactions.dequeue_player import dequeue_player
 from Theater.transactions.echo import echo
 from Theater.transactions.enter_game_host_response import enter_game_host_response
 from Theater.transactions.enter_game_request import enter_game_request
@@ -15,6 +16,7 @@ from Theater.transactions.login import login
 from Theater.transactions.ping import ping
 from Theater.transactions.player_entered import player_entered
 from Theater.transactions.player_exited import player_exited
+from Theater.transactions.queue_update import queue_update
 from Theater.transactions.update_bracket import update_bracket
 from Theater.transactions.update_game_data import update_game_data
 from Theater.transactions.update_game_details import update_game_details
@@ -34,12 +36,17 @@ class Transaction(Enum):
     UpdateGameData = "UGAM"
     UpdateGameDetails = "UGDE"
     EnterGameRequest = "EGAM"
+    EnterGameNotice = "EGEG"
     EnterGameHostRequest = "EGRQ"
     EnterGameHostResponse = "EGRS"
     PlayerEntered = "PENT"
     PlayerExited = "PLVT"
     LeaveGame = "ECNL"
     Ping = "PING"
+    QueueEnter = "QENT"
+    QueueUpdate = "UQUE"
+    QueueInfoNotice = "QLEN"
+    DequeuePlayer = "DQEG"
 
 
 class TransactionKind(Enum):
@@ -52,7 +59,7 @@ class Transactor:
     tid = 0  # Transaction ID
     transactions = {}
 
-    allowed_remote_transactions = [Transaction.EnterGameHostRequest]
+    allowed_remote_transactions = [Transaction.EnterGameHostRequest, Transaction.QueueEnter, Transaction.QueueInfoNotice, Transaction.EnterGameRequest, Transaction.EnterGameNotice]
 
     def __init__(self, connection):
         self.connection = connection
@@ -73,6 +80,8 @@ class Transactor:
         self.transactions[Transaction.LeaveGame] = leave_game
         self.transactions[Transaction.Ping] = ping
         self.transactions[Transaction.Echo] = echo
+        self.transactions[Transaction.QueueUpdate] = queue_update
+        self.transactions[Transaction.DequeuePlayer] = dequeue_player
 
     async def start(self, service, data):
         service = Transaction(service)
@@ -81,8 +90,8 @@ class Transactor:
             logger.error(f"Transaction {service} is not allowed to be sent remotely")
 
         packet = Packet()
-        packet.service = service.value
         packet.kind = TransactionKind.NormalResponse.value
+        packet.service = service.value
 
         for key in data:
             packet.Set(key, data[key])
@@ -160,8 +169,9 @@ class Transactor:
 
                 if response.service is None:
                     response.service = transaction.value
-
-                response.kind = TransactionKind.NormalResponse.value
+                
+                if response.kind is None:
+                    response.kind = TransactionKind.NormalResponse.value
 
                 if transaction != Transaction.Ping:
                     response.Set("TID", self.tid)

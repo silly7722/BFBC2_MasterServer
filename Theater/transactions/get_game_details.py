@@ -12,8 +12,6 @@ async def get_game_details(connection, message):
         yield response
         return
 
-    # TODO: Queue system
-
     gameData = await Game.objects.get_game_data(lid, gid)
 
     for key in gameData:

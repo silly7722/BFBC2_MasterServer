@@ -25,6 +25,7 @@ class TheaterConsumer(BFBC2Consumer):
     currentlyUpdating = False
 
     lkey = None
+    pid = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -37,6 +38,7 @@ class TheaterConsumer(BFBC2Consumer):
             from Theater.models import Game
 
             cache.delete(f"gameSession:{self.game.id}")
+            cache.delete(f"queue:{self.game.id}")
             cache.delete(f"nextServerPlayerID:{self.game.id}")
 
             await Game.objects.delete_game(self.game)

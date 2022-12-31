@@ -16,6 +16,13 @@ async def enter_game_request(connection, message):
 
     if not game:
         return
+    
+    # pid is the unique player id on the game server
+    pid = cache.get_or_set(f"nextServerPlayerID:{gid}", 0, timeout=None)
+    connection.pid = pid
+
+    cache.incr(f"nextServerPlayerID:{gid}")
+    cache.set(f"players:{gid}:{pid}", connection.lkey, timeout=None)
 
     response = Packet()
     response.Set("LID", lid)
@@ -24,17 +31,24 @@ async def enter_game_request(connection, message):
     serverFull = game.activePlayers + 1 > game.maxPlayers
 
     if serverFull:
-        # TODO: Queue system
-        return
+        response.kind = 0x71756575
+
+        queue_str = cache.get_or_set(f"queue:{gid}", "", timeout=None)
+        queue_list = queue_str.split(";")
+        queue_list.append(str(pid))
+        queue_str = ";".join(queue_list)
+        cache.set(f"queue:{gid}", queue_str, timeout=None)
+        cache.set(f"playerData:{gid}:{pid}", f"{connection.persona.id};{message.Get('R-INT-IP')}:{message.Get('R-INT-PORT')};{connection.ip}:{message.Get('PORT')};{message.Get('PTYPE')}", timeout=None)
+
+        response.Set("QPOS", queue_list.index(str(pid)) - 1)
+        response.Set("QLEN", len(queue_list) - 1)
 
     yield response
 
     # Ticket is random 10 digit number, it has to be sent to both client and server
     ticket = "".join(random.choices(string.digits, k=10))
 
-    # pid is the unique player id on the game server
-    pid = cache.get_or_set(f"nextServerPlayerID:{gid}", 0, timeout=None)
-    cache.incr(f"nextServerPlayerID:{gid}")
+    gameSession = cache.get(f"gameSession:{gid}")
 
     # Sent "Enter Game Host Request" to the game server
     if not serverFull:
@@ -51,8 +65,10 @@ async def enter_game_request(connection, message):
             "LID": lid,
             "GID": gid,
         }
+
+        await connection.send_remote_message(gameSession, "EGRQ", enterGameHostRequestData)
     else:
-        enterGameHostRequestData = {
+        queueEnter = {
             "R-INT-IP": message.Get("R-INT-IP"),
             "R-INT-PORT": message.Get("R-INT-PORT"),
             "NAME": connection.persona.name,
@@ -62,7 +78,7 @@ async def enter_game_request(connection, message):
             "GID": gid,
         }
 
-    await connection.send_remotely_to_server(gid, "EGRQ", enterGameHostRequestData)
+        await connection.send_remote_message(gameSession, "QENT", queueEnter)
 
     owner = await Game.objects.get_game_owner(lid, gid)
 
@@ -80,4 +96,5 @@ async def enter_game_request(connection, message):
     enterGameNotice.Set("LID", lid)
     enterGameNotice.Set("GID", gid)
 
-    yield enterGameNotice
+    if not serverFull:
+        yield enterGameNotice
