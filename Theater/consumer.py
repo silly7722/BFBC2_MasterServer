@@ -24,6 +24,8 @@ class TheaterConsumer(BFBC2Consumer):
     game = None
     currentlyUpdating = False
 
+    lkey = None
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.transactor = Transactor(self)
@@ -34,10 +36,12 @@ class TheaterConsumer(BFBC2Consumer):
         if self.game:
             from Theater.models import Game
 
-            cache.delete(f"serverSession:{self.game.id}")
+            cache.delete(f"gameSession:{self.game.id}")
             cache.delete(f"nextServerPlayerID:{self.game.id}")
 
             await Game.objects.delete_game(self.game)
+        
+        cache.delete(f"theaterSession:{self.lkey}")
 
     async def receive(self, text_data=None, bytes_data=None):
         message = await super().receive(text_data, bytes_data)
@@ -93,8 +97,8 @@ class TheaterConsumer(BFBC2Consumer):
         message = event["message"]
         await self.transactor.start(message["service"], message["data"])
 
-    async def send_remotely_to_server(self, target, serviceStr, data):
-        active_session = cache.get(f"serverSession:{target}")
+    async def send_remote_message(self, target, serviceStr, data):
+        active_session = cache.get(f"theaterSession:{target}")
         channel_layer = get_channel_layer()
 
         if active_session:

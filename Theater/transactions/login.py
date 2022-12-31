@@ -43,4 +43,7 @@ async def login(connection, message):
     response = Packet()
     response.Set("NAME", persona.name)
 
+    cache.set(f"theaterSession:{lkey}", connection.channel_name, timeout=None)
+    connection.lkey = lkey
+
     yield response
