@@ -3,6 +3,7 @@ from base64 import b64encode
 
 from asgiref.sync import sync_to_async
 from django.db import models
+from django.db.models import Q
 
 
 class LobbyManager(models.Manager):
@@ -180,6 +181,27 @@ class GameManager(models.Manager):
                 game.gameThreeDSpotting = value
 
         game.save()
+
+    @sync_to_async()
+    def find_game(self, gamemode, level):
+        gamemodes = gamemode.split("|")
+
+        q = Q(gameMode=gamemodes[0])
+        gamemodes.pop(0)
+
+        for gamemode in gamemodes:
+            q = q | Q(gameMode=gamemode)
+
+        filtered_games = self.filter(q, serverHasPassword=False
+        ).order_by("-serverEA", "-activePlayers")
+
+        if level:
+            filtered_games_level = filtered_games.filter(gameLevel=level)
+
+            if filtered_games_level.count() != 0:
+                return filtered_games_level.first()
+
+        return filtered_games.first()
 
     @sync_to_async
     def get_games(self, lobby, gameType, gameMod, count, minGID, **filters):
