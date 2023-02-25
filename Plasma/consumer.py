@@ -18,11 +18,12 @@ from Plasma.enumerators.ClientPlatform import ClientPlatform
 from Plasma.enumerators.ClientType import ClientType
 from Plasma.models import Persona
 from Plasma.services.connect import TXN as ConnectTXN
+from Plasma.services.playnow import TXN as PlayNowTXN
 from Plasma.transactor import TransactionKind, TransactionService, Transactor
+from Theater.models import Game
 
 
 class PlasmaConsumer(BFBC2Consumer):
-
     clientString: str = None
     clientPlatform: ClientPlatform = None
     clientVersion = None
@@ -41,6 +42,7 @@ class PlasmaConsumer(BFBC2Consumer):
 
     loggedUser, loggedUserKey = None, None
     loggedPersona, loggedPersonaKey = None, None
+    matchmakingId = None
 
     subscribedTo = []
 
@@ -114,7 +116,7 @@ class PlasmaConsumer(BFBC2Consumer):
         )
 
         if self.clientVersion == version.parse(
-            "1.0"
+                "1.0"
         ) or self.clientVersion == version.parse("2.0"):
             # 1.0 - client, 2.0 - server
             pass
@@ -212,4 +214,22 @@ class PlasmaConsumer(BFBC2Consumer):
                         "data": data,
                     },
                 },
+            )
+
+    async def start_matchmaking(self, props):
+        prefGamemode = props["{filter-gamemode}"]
+        prefLevel = props.get("{pref-level}")
+
+        game = await Game.objects.find_game(prefGamemode, prefLevel)
+
+        if game:
+            await self.transactor.start(
+                TransactionService.PlayNowService, PlayNowTXN.Status, {
+                    "gid": game.id,
+                    "lid": game.lobby_id,
+                }
+            )
+        else:
+            await self.transactor.start(
+                TransactionService.PlayNowService, PlayNowTXN.Status, {}
             )

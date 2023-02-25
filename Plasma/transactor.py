@@ -12,6 +12,8 @@ from Plasma.services.connect import TXN as ConnectTXN
 from Plasma.services.connect import ConnectService
 from Plasma.services.message import TXN as MessageTXN
 from Plasma.services.message import ExtensibleMessageService
+from Plasma.services.playnow import PlayNowService
+from Plasma.services.playnow import TXN as PlayNowTXN
 from Plasma.services.presence import TXN as PresenceTXN
 from Plasma.services.presence import PresenceService
 from Plasma.services.ranking import RankingService
@@ -23,6 +25,7 @@ class TransactionService(Enum):
     AccountService = "acct"
     AssociationService = "asso"
     ExtensibleMessageService = "xmsg"
+    PlayNowService = "pnow"
     PresenceService = "pres"
     RankingService = "rank"
     RecordService = "recp"
@@ -49,6 +52,7 @@ class Transactor:
         MessageTXN.AsyncMessageEvent.value,
         MessageTXN.AsyncPurgedEvent.value,
         PresenceTXN.AsyncPresenceStatusEvent.value,
+        PlayNowTXN.Status.value,
     ]
     allowed_transactions_without_auth = [
         # All transactions from ConnectService are allowed without auth (not included in this list)
@@ -72,6 +76,7 @@ class Transactor:
         self.services[
             TransactionService.ExtensibleMessageService
         ] = ExtensibleMessageService(connection)
+        self.services[TransactionService.PlayNowService] = PlayNowService(connection)
         self.services[TransactionService.PresenceService] = PresenceService(connection)
         self.services[TransactionService.RankingService] = RankingService(connection)
         self.services[TransactionService.RecordService] = RecordService(connection)
