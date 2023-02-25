@@ -10,7 +10,12 @@ async def leave_game(connection, message):
     if connection.pid:
         queue_str = cache.get_or_set(f"queue:{gid}", "", timeout=None)
         queue_list = queue_str.split(";")
-        queue_list.remove(str(connection.pid))
+
+        try:
+            queue_list.remove(str(connection.pid))
+        except ValueError:
+            pass
+
         cache.set(f"queue:{gid}", ";".join(queue_list), timeout=None)
 
         cache.delete(f"players:{gid}:{connection.pid}")
