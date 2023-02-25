@@ -184,8 +184,11 @@ class GameManager(models.Manager):
     @sync_to_async
     def get_games(self, lobby, gameType, gameMod, count, minGID):
         filtered_games = self.filter(
-            id__gt=minGID, lobby=lobby, gameType=gameType, gameMod=gameMod
-        )[:count]
+            id__gt=int(minGID), lobby=lobby, gameType=gameType, gameMod=gameMod
+        )
+
+        if count > 0:
+            filtered_games = filtered_games[:count]
 
         games = []
 
