@@ -182,7 +182,7 @@ class GameManager(models.Manager):
         game.save()
 
     @sync_to_async
-    def get_games(self, lobby, gameType, gameMod, count, minGID):
+    def get_games(self, lobby, gameType, gameMod, count, minGID, **filters):
         filtered_games = self.filter(
             id__gt=int(minGID), lobby=lobby, gameType=gameType, gameMod=gameMod
         )
@@ -193,6 +193,59 @@ class GameManager(models.Manager):
         games = []
 
         for game in filtered_games:
+            if filters.get("favGame"):
+                serverName = game.name
+                favGames = filters.get("favGame").split(";")
+
+                isInFavGame = False
+                for favGame in favGames:
+                    if favGame.casefold() == serverName.casefold():
+                        isInFavGame = True
+                        break
+
+                if not isInFavGame:
+                    continue
+
+            if filters.get("notFull", False):
+                if game.activePlayers >= game.maxPlayers:
+                    continue
+
+            if filters.get("minPlayers", 0):
+                if game.activePlayers < filters.get("minPlayers"):
+                    continue
+
+            if filters.get("gamemode", None):
+                if game.gameMode != filters.get("gamemode"):
+                    continue
+
+            if filters.get("level", None):
+                if game.gameLevel != filters.get("level"):
+                    continue
+
+            if filters.get("region", None):
+                if game.gameRegion != filters.get("region"):
+                    continue
+
+            if filters.get("public", False):
+                if not game.gamePublic:
+                    continue
+
+            if filters.get("punkbuster", False):
+                if not game.serverPunkbuster:
+                    continue
+
+            if filters.get("password", False):
+                if not game.serverHasPassword:
+                    continue
+
+            if filters.get("softcore", False):
+                if not game.serverSoftcore:
+                    continue
+
+            if filters.get("ea", False):
+                if not game.serverEA:
+                    continue
+
             game_data = {
                 "LID": game.lobby.id,
                 "GID": game.id,
