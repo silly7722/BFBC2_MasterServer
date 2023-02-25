@@ -176,7 +176,13 @@ class EntitlementManager(models.Manager):
 
             activated_list.append(activated_entitlement)
 
-        return ActivationResult.SUCCESS, activated_entitlement
+        if not key.is_permanent:
+            key.is_used = True
+            key.used_at = timezone.now()
+            key.used_by = user
+            await sync_to_async(key.save)()
+
+        return ActivationResult.SUCCESS, activated_list
 
     @sync_to_async
     def count_entitlements(self, user, filters):
