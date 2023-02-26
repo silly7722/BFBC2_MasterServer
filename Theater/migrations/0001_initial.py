@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -15,9 +14,14 @@ class Migration(migrations.Migration):
             name='Lobby',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Name of the lobby', max_length=64, unique=True, verbose_name='Lobby Name')),
-                ('locale', models.CharField(choices=[('en_US', 'English'), ('fr_FR', 'French'), ('de', 'German'), ('es', 'Spanish'), ('it', 'Italian'), ('ja', 'Japanese'), ('ru', 'Russian'), ('pl', 'Polish')], help_text='Locale of the lobby', max_length=5, verbose_name='Locale')),
-                ('maxGames', models.IntegerField(default=10000, help_text='Maximum number of games in the lobby', verbose_name='Max Games')),
+                ('name', models.CharField(help_text='Name of the lobby', max_length=64, unique=True,
+                                          verbose_name='Lobby Name')),
+                ('locale', models.CharField(
+                    choices=[('en_US', 'English'), ('fr_FR', 'French'), ('de', 'German'), ('es', 'Spanish'),
+                             ('it', 'Italian'), ('ja', 'Japanese'), ('ru', 'Russian'), ('pl', 'Polish')],
+                    help_text='Locale of the lobby', max_length=5, verbose_name='Locale')),
+                ('maxGames', models.IntegerField(default=10000, help_text='Maximum number of games in the lobby',
+                                                 verbose_name='Max Games')),
             ],
             options={
                 'verbose_name': 'Lobby',

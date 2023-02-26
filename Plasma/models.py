@@ -14,7 +14,6 @@ from Plasma.managers import (
 
 # Create your models here.
 class Account(AbstractBaseUser, PermissionsMixin):
-
     nuid = models.EmailField(max_length=32, unique=True, verbose_name="Email Address")
 
     globalOptin = models.BooleanField(
@@ -178,6 +177,7 @@ class Entitlement(models.Model):
         verbose_name_plural = "Entitlements"
         ordering = ("id",)
 
+
 class EntitlementTarget(models.Model):
     tag = models.CharField(max_length=255, verbose_name="Entitlement Tag")
 
@@ -199,7 +199,8 @@ class EntitlementTarget(models.Model):
         help_text="ID of the product this entitlement grants access to.",
     )
 
-    duration = models.DurationField(null=True, blank=True, verbose_name="Entitlement Duration", help_text="How long this entitlement will last?")
+    duration = models.DurationField(null=True, blank=True, verbose_name="Entitlement Duration",
+                                    help_text="How long this entitlement will last?")
 
     def __str__(self) -> str:
         return f"{self.tag} ({self.id})"
@@ -208,6 +209,7 @@ class EntitlementTarget(models.Model):
         verbose_name = "Entitlement Target"
         verbose_name_plural = "Entitlement Targets"
         ordering = ("id",)
+
 
 class SerialKey(models.Model):
     key = models.CharField(max_length=255, verbose_name="Serial Key", unique=True)

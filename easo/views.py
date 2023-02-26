@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.views.defaults import server_error
 
+
 # Create your views here.
 
 

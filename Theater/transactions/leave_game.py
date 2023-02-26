@@ -1,6 +1,6 @@
-from BFBC2_MasterServer.packet import Packet
-from Theater.models import Game
 from django.core.cache import cache
+
+from BFBC2_MasterServer.packet import Packet
 
 
 async def leave_game(connection, message):
@@ -14,13 +14,14 @@ async def leave_game(connection, message):
         try:
             queue_list.remove(str(connection.pid))
         except ValueError:
+            # Server probably is shutdown and we cannot remove the player from the queue, ignore this exception
             pass
 
         cache.set(f"queue:{gid}", ";".join(queue_list), timeout=None)
 
         cache.delete(f"players:{gid}:{connection.pid}")
         cache.delete(f"playerData:{gid}:{connection.pid}")
-    
+
     connection.pid = None
 
     response = Packet()

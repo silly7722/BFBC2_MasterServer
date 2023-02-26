@@ -9,7 +9,6 @@ from Theater.transactor import Transactor
 
 
 class TheaterConsumer(BFBC2Consumer):
-
     prot = None  # Protocol Version
     prod = None  # Game ID
     vers = None  # Game Version
@@ -42,7 +41,7 @@ class TheaterConsumer(BFBC2Consumer):
             cache.delete(f"nextServerPlayerID:{self.game.id}")
 
             await Game.objects.delete_game(self.game)
-        
+
         cache.delete(f"theaterSession:{self.lkey}")
 
     async def receive(self, text_data=None, bytes_data=None):

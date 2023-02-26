@@ -19,7 +19,6 @@ class PacketParseException(Exception):
 
 
 class Packet:
-
     service: str = None
     kind: int = None
 
@@ -70,13 +69,13 @@ class Packet:
             )
 
         self.service = raw_data[
-            SERVICE_OFFSET : SERVICE_OFFSET + SERVICE_LENGTH
-        ].decode("utf-8")
+                       SERVICE_OFFSET: SERVICE_OFFSET + SERVICE_LENGTH
+                       ].decode("utf-8")
         self.kind = int.from_bytes(
-            raw_data[KIND_OFFSET : KIND_OFFSET + KIND_LENGTH], byteorder="big"
+            raw_data[KIND_OFFSET: KIND_OFFSET + KIND_LENGTH], byteorder="big"
         )
         self.__length = int.from_bytes(
-            raw_data[LENGTH_OFFSET : LENGTH_OFFSET + LENGTH_LENGTH], byteorder="big"
+            raw_data[LENGTH_OFFSET: LENGTH_OFFSET + LENGTH_LENGTH], byteorder="big"
         )
 
         if received_length != self.__length:
@@ -205,7 +204,7 @@ class Packet:
                 for y in values[x]:
                     if isinstance(values[x][y], list):
                         processed_dict += (
-                            f"{key}.{x}.{y}" + ".[]=" + str(len(values[x][y])) + "\n"
+                                f"{key}.{x}.{y}" + ".[]=" + str(len(values[x][y])) + "\n"
                         )
                         processed_dict += self.__process_dict(
                             f"{key}.{x}.{y}", values[x][y]
@@ -217,23 +216,23 @@ class Packet:
                     else:
                         if skip_idx:
                             processed_dict += (
-                                key
-                                + "."
-                                + y
-                                + "="
-                                + self.__encode_string(values[x][y])
-                                + "\n"
+                                    key
+                                    + "."
+                                    + y
+                                    + "="
+                                    + self.__encode_string(values[x][y])
+                                    + "\n"
                             )
                         else:
                             processed_dict += (
-                                key
-                                + "."
-                                + str(x)
-                                + "."
-                                + y
-                                + "="
-                                + self.__encode_string(values[x][y])
-                                + "\n"
+                                    key
+                                    + "."
+                                    + str(x)
+                                    + "."
+                                    + y
+                                    + "="
+                                    + self.__encode_string(values[x][y])
+                                    + "\n"
                             )
             else:
                 if isinstance(values[x], list):
@@ -246,16 +245,16 @@ class Packet:
                 else:
                     if skip_idx:
                         processed_dict += (
-                            key + "=" + self.__encode_string(values[x]) + "\n"
+                                key + "=" + self.__encode_string(values[x]) + "\n"
                         )
                     else:
                         processed_dict += (
-                            key
-                            + "."
-                            + str(x)
-                            + "="
-                            + self.__encode_string(values[x])
-                            + "\n"
+                                key
+                                + "."
+                                + str(x)
+                                + "="
+                                + self.__encode_string(values[x])
+                                + "\n"
                         )
 
         return processed_dict

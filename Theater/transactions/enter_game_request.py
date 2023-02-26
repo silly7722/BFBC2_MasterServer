@@ -1,7 +1,6 @@
 import random
 import string
 
-from django.conf import settings
 from django.core.cache import cache
 
 from BFBC2_MasterServer.packet import Packet
@@ -16,7 +15,7 @@ async def enter_game_request(connection, message):
 
     if not game:
         return
-    
+
     # pid is the unique player id on the game server
     pid = cache.get_or_set(f"nextServerPlayerID:{gid}", 0, timeout=None)
     connection.pid = pid
@@ -38,7 +37,9 @@ async def enter_game_request(connection, message):
         queue_list.append(str(pid))
         queue_str = ";".join(queue_list)
         cache.set(f"queue:{gid}", queue_str, timeout=None)
-        cache.set(f"playerData:{gid}:{pid}", f"{connection.persona.id};{message.Get('R-INT-IP')}:{message.Get('R-INT-PORT')};{connection.ip}:{message.Get('PORT')};{message.Get('PTYPE')}", timeout=None)
+        cache.set(f"playerData:{gid}:{pid}",
+                  f"{connection.persona.id};{message.Get('R-INT-IP')}:{message.Get('R-INT-PORT')};{connection.ip}:{message.Get('PORT')};{message.Get('PTYPE')}",
+                  timeout=None)
 
         response.Set("QPOS", queue_list.index(str(pid)) - 1)
         response.Set("QLEN", len(queue_list) - 1)

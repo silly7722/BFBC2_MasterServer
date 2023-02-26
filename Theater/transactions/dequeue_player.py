@@ -1,5 +1,6 @@
-from BFBC2_MasterServer.packet import Packet
 from django.core.cache import cache
+
+from BFBC2_MasterServer.packet import Packet
 
 
 async def dequeue_player(connection, message):
@@ -13,5 +14,5 @@ async def dequeue_player(connection, message):
 
     cache.delete(f"players:{gid}:{pid}")
     cache.delete(f"playerData:{gid}:{pid}")
-    
+
     yield Packet()

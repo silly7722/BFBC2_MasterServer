@@ -1,5 +1,3 @@
-import json
-from base64 import b64decode
 from datetime import timedelta
 
 from asgiref.sync import sync_to_async
@@ -122,7 +120,7 @@ class EntitlementManager(models.Manager):
             }
             for entitlement in entitlements
         ]
-    
+
     @sync_to_async
     def get_key_targets(self, key):
         return list(key.targets.all())
@@ -276,8 +274,8 @@ class PersonaManager(models.Manager):
     @sync_to_async
     def suggest_personas(self, account, keywords, max_results):
         filtered_personas = self.filter(name__icontains__in=keywords)[
-            :max_results
-        ].exclude(account=account)
+                            :max_results
+                            ].exclude(account=account)
         return [persona.name for persona in filtered_personas]
 
     @sync_to_async
@@ -564,7 +562,7 @@ class RankingManager(models.Manager):
             rank=Window(expression=RowNumber(), order_by=F("value").desc())
         )
 
-        ranked_personas = ranked[minRank - 1 : maxRank + 1]
+        ranked_personas = ranked[minRank - 1: maxRank + 1]
         personas = []
 
         for stat in ranked_personas:

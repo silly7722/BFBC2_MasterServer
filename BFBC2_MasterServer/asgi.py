@@ -35,4 +35,5 @@ try:
     # Remove all lobbies on server start
     Lobby.objects.all().delete()
 except ProgrammingError:
+    # Database is not ready yet, ignore this exception
     pass

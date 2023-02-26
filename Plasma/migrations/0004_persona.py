@@ -31,7 +31,6 @@ def create_server_personas(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("Plasma", "0003_serialkey"),
     ]

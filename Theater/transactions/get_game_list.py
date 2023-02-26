@@ -61,7 +61,7 @@ async def get_game_list(connection, message):
         game_data = Packet(service="GDAT")  # GDAT = Game Data
 
         for key in game:
-            if game[key] == None:
+            if game[key] is None:
                 continue
 
             game_data.Set(key, game[key])

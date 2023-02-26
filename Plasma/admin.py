@@ -14,6 +14,7 @@ from Plasma.models import (
     SerialKey,
 )
 
+
 # Register your models here.
 
 
@@ -133,6 +134,7 @@ class EntitlementAdmin(admin.ModelAdmin):
         "isGameEntitlement",
     )
 
+
 class EntitlementTargetAdmin(admin.ModelAdmin):
     list_display = [
         "id",
@@ -149,6 +151,7 @@ class EntitlementTargetAdmin(admin.ModelAdmin):
         "product",
         "duration",
     )
+
 
 class SerialKeyAdmin(admin.ModelAdmin):
     list_display = [

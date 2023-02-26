@@ -1,10 +1,11 @@
 import random
 import string
-from BFBC2_MasterServer.packet import Packet
-from django.core.cache import cache
-from Plasma.models import Persona
-from channels.auth import database_sync_to_async
 
+from channels.auth import database_sync_to_async
+from django.core.cache import cache
+
+from BFBC2_MasterServer.packet import Packet
+from Plasma.models import Persona
 from Theater.models import Game
 
 
@@ -25,13 +26,13 @@ async def queue_update(connection, message):
         return
 
     pid = message.Get("QUEUE")
-    
+
     queue_str = cache.get_or_set(f"queue:{gid}", "", timeout=None)
     queue_list = queue_str.split(";")
-    
+
     idx = queue_list.index(str(pid)) - 1
     playerSession = cache.get(f"players:{gid}:{pid}")
-    
+
     serverFull = game.activePlayers + 1 > game.maxPlayers
 
     if serverFull:
@@ -48,7 +49,7 @@ async def queue_update(connection, message):
 
     if serverFull:
         return
-    
+
     playerData = cache.get(f"playerData:{gid}:{pid}")
 
     persona_id, int_addr, addr, ptype = playerData.split(";")

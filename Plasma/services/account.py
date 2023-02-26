@@ -61,7 +61,6 @@ class TXN(Enum):
 
 
 class AccountService(Service):
-
     ENCRYPTED_PREFIX = "Ciyvab0tregdVsBtboIpeChe4G6uzC1v5_-SIxmvSL"
 
     countryListPath = os.path.join(settings.BASE_DIR, "Plasma/data/CountryList")
@@ -134,7 +133,7 @@ class AccountService(Service):
         tosFilename = "TOS.txt"
 
         if Path(
-            os.path.join(self.tosPath, tosFilename.replace(".", f".{locale}."))
+                os.path.join(self.tosPath, tosFilename.replace(".", f".{locale}."))
         ).exists():
             tosFilename = tosFilename.replace(".", f".{locale}.")
 
@@ -168,7 +167,7 @@ class AccountService(Service):
 
             if pos := decryptedInfo.find("\f"):
                 nuid = decryptedInfo[:pos]
-                password = decryptedInfo[pos + 1 :]
+                password = decryptedInfo[pos + 1:]
 
         umodel = get_user_model()
 
@@ -242,11 +241,11 @@ class AccountService(Service):
         if not user_lkey:
             # Generate new login key, because user doesn't have one (or previous one expired)
             user_lkey = (
-                "".join(
-                    random.choice(string.ascii_letters + string.digits + "-_")
-                    for _ in range(27)
-                )
-                + "."
+                    "".join(
+                        random.choice(string.ascii_letters + string.digits + "-_")
+                        for _ in range(27)
+                    )
+                    + "."
             )
 
             # Save login key that never expires (we set expiration time when user logs out)
@@ -345,9 +344,9 @@ class AccountService(Service):
         dateToday = date.today()
 
         age = (
-            dateToday.year
-            - dateOfBirth.year
-            - ((dateToday.month, dateToday.day) < (dateOfBirth.month, dateOfBirth.day))
+                dateToday.year
+                - dateOfBirth.year
+                - ((dateToday.month, dateToday.day) < (dateOfBirth.month, dateOfBirth.day))
         )
 
         countryConfig = self.countryConfigOverrides.get(data.Get("country"), {})
@@ -437,9 +436,9 @@ class AccountService(Service):
         countryListFilename = "CountryList.csv"
 
         if Path(
-            os.path.join(
-                self.countryListPath, countryListFilename.replace(".", f".{locale}.")
-            )
+                os.path.join(
+                    self.countryListPath, countryListFilename.replace(".", f".{locale}.")
+                )
         ).exists():
             countryListFilename = countryListFilename.replace(".", f".{locale}.")
 
@@ -494,8 +493,8 @@ class AccountService(Service):
         selected_country_code = data.Get("countryCode")
 
         if (
-            selected_country_code is not None
-            and selected_country_code not in self.validCountryCodes
+                selected_country_code is not None
+                and selected_country_code not in self.validCountryCodes
         ):
             raise ValueError(
                 f"{selected_country_code} is not valid country code for NuGetTos."
@@ -588,11 +587,11 @@ class AccountService(Service):
         if not persona_lkey:
             # Generate new login key, because user doesn't have one (or previous one expired)
             persona_lkey = (
-                "".join(
-                    random.choice(string.ascii_letters + string.digits + "-_")
-                    for _ in range(27)
-                )
-                + "."
+                    "".join(
+                        random.choice(string.ascii_letters + string.digits + "-_")
+                        for _ in range(27)
+                    )
+                    + "."
             )
 
             # Save login key that never expires (we set expiration time when user logs out)
@@ -771,10 +770,10 @@ class AccountService(Service):
         thirdPartyOptin = data.Get("thirdPartyOptin")
 
         if (
-            nuid is None
-            or password is None
-            or globalOptin is None
-            or thirdPartyOptin is None
+                nuid is None
+                or password is None
+                or globalOptin is None
+                or thirdPartyOptin is None
         ):
             return TransactionError(TransactionError.Code.PARAMETERS_ERROR)
 
@@ -937,7 +936,7 @@ class AccountService(Service):
         # We don't need it, so we just fill it with zeros
 
         token += (
-            "\0" * 104
+                "\0" * 104
         )  # Token length is 104 bytes (at least that's what I've seen in original server)
         token = legacy_b64encode(token).decode("utf-8")
 
