@@ -142,9 +142,7 @@ class EntitlementManager(models.Manager):
         activated_list = []
 
         for target in targets:
-            current_entitlements = await self.list_entitlements(
-                user, target.group
-            )
+            current_entitlements = await self.list_entitlements(user, target.group)
             already_entitled = False
 
             for entitlement in current_entitlements:
@@ -158,9 +156,7 @@ class EntitlementManager(models.Manager):
             duration = target.duration
 
             if duration:
-                duration = timezone.now() + timezone.timedelta(
-                    seconds=duration
-                )
+                duration = timezone.now() + timezone.timedelta(seconds=duration)
 
             activated_entitlement = await sync_to_async(self.create)(
                 account=user,
@@ -274,8 +270,8 @@ class PersonaManager(models.Manager):
     @sync_to_async
     def suggest_personas(self, account, keywords, max_results):
         filtered_personas = self.filter(name__icontains__in=keywords)[
-                            :max_results
-                            ].exclude(account=account)
+            :max_results
+        ].exclude(account=account)
         return [persona.name for persona in filtered_personas]
 
     @sync_to_async
@@ -562,7 +558,7 @@ class RankingManager(models.Manager):
             rank=Window(expression=RowNumber(), order_by=F("value").desc())
         )
 
-        ranked_personas = ranked[minRank - 1: maxRank + 1]
+        ranked_personas = ranked[minRank - 1 : maxRank + 1]
         personas = []
 
         for stat in ranked_personas:

@@ -34,18 +34,24 @@ async def get_game_list(connection, message):
     if gid is None:
         gid = 0
 
-    games = await Game.objects.get_games(lobby, gameType, gameMod, int(count), gid,
-                                         favGame=favGame,
-                                         notFull=notFull,
-                                         minPlayers=minPlayers,
-                                         gamemode=gamemode,
-                                         level=level,
-                                         region=region,
-                                         public=public,
-                                         punkbuster=punkbuster,
-                                         password=password,
-                                         softcore=softcore,
-                                         ea=ea)
+    games = await Game.objects.get_games(
+        lobby,
+        gameType,
+        gameMod,
+        int(count),
+        gid,
+        favGame=favGame,
+        notFull=notFull,
+        minPlayers=minPlayers,
+        gamemode=gamemode,
+        level=level,
+        region=region,
+        public=public,
+        punkbuster=punkbuster,
+        password=password,
+        softcore=softcore,
+        ea=ea,
+    )
 
     lobby_game_count = await Game.objects.get_lobby_games_count(lobby)
 

@@ -6,26 +6,52 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('Theater', '0002_game'),
+        ("Theater", "0002_game"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PlayerData',
+            name="PlayerData",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('index', models.IntegerField()),
-                ('data', models.TextField(default='|0|0|0|0', null=True)),
-                ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='Theater.game')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("index", models.IntegerField()),
+                ("data", models.TextField(default="|0|0|0|0", null=True)),
+                (
+                    "owner",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="Theater.game"
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='GameDescription',
+            name="GameDescription",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('index', models.IntegerField()),
-                ('text', models.TextField(null=True)),
-                ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='Theater.game')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("index", models.IntegerField()),
+                ("text", models.TextField(null=True)),
+                (
+                    "owner",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="Theater.game"
+                    ),
+                ),
             ],
         ),
     ]

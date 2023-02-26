@@ -6,31 +6,18 @@ from django.db import migrations, models
 def create_default_entitlement_targets(apps, schema_editor):
     EntitlementTarget = apps.get_model("Plasma", "EntitlementTarget")
 
+    EntitlementTarget(tag="bfbc2-pc", game=True).save()
+
+    EntitlementTarget(tag="ONLINE_ACCESS", product="DR:156691300").save()
+
+    EntitlementTarget(tag="BETA_ONLINE_ACCESS", product="OFB-BFBC:19121").save()
+
     EntitlementTarget(
-        tag="bfbc2-pc",
-        game=True
+        tag="BFBC2:PC:VIETNAM_ACCESS", group="BFBC2PC", product="DR:219316800"
     ).save()
 
     EntitlementTarget(
-        tag="ONLINE_ACCESS",
-        product="DR:156691300"
-    ).save()
-
-    EntitlementTarget(
-        tag="BETA_ONLINE_ACCESS",
-        product="OFB-BFBC:19121"
-    ).save()
-
-    EntitlementTarget(
-        tag="BFBC2:PC:VIETNAM_ACCESS",
-        group="BFBC2PC",
-        product="DR:219316800"
-    ).save()
-
-    EntitlementTarget(
-        tag="BFBC2:PC:VIETNAM_PDLC",
-        group="BFBC2PC",
-        product="DR:219316800"
+        tag="BFBC2:PC:VIETNAM_PDLC", group="BFBC2PC", product="DR:219316800"
     ).save()
 
     EntitlementTarget(
@@ -44,54 +31,90 @@ def create_default_entitlement_targets(apps, schema_editor):
     ).save()
 
     EntitlementTarget(
-        tag="BFBC2:PC:LimitedEdition",
-        group="BFBC2PC",
-        product="OFB-BFBC:19120"
+        tag="BFBC2:PC:LimitedEdition", group="BFBC2PC", product="OFB-BFBC:19120"
     ).save()
 
     EntitlementTarget(
-        tag="BFBC2:PC:ADDSVETRANK",
-        group="BFBC2PC",
-        product="OFB-EAST:40873"
+        tag="BFBC2:PC:ADDSVETRANK", group="BFBC2PC", product="OFB-EAST:40873"
     ).save()
 
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('Plasma', '0008_record'),
+        ("Plasma", "0008_record"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='EntitlementTarget',
+            name="EntitlementTarget",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('tag', models.CharField(max_length=255, verbose_name='Entitlement Tag')),
-                ('game',
-                 models.BooleanField(default=False, help_text='Is game entitlement?', verbose_name='Game Entitlement')),
-                ('group', models.CharField(blank=True, help_text='Name of the group this entitlement grants access to.',
-                                           max_length=255, null=True, verbose_name='Group Name')),
-                ('product',
-                 models.CharField(blank=True, help_text='ID of the product this entitlement grants access to.',
-                                  max_length=255, null=True, verbose_name='Product ID')),
-                ('duration',
-                 models.DurationField(blank=True, help_text='How long this entitlement will last?', null=True,
-                                      verbose_name='Entitlement Duration')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "tag",
+                    models.CharField(max_length=255, verbose_name="Entitlement Tag"),
+                ),
+                (
+                    "game",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Is game entitlement?",
+                        verbose_name="Game Entitlement",
+                    ),
+                ),
+                (
+                    "group",
+                    models.CharField(
+                        blank=True,
+                        help_text="Name of the group this entitlement grants access to.",
+                        max_length=255,
+                        null=True,
+                        verbose_name="Group Name",
+                    ),
+                ),
+                (
+                    "product",
+                    models.CharField(
+                        blank=True,
+                        help_text="ID of the product this entitlement grants access to.",
+                        max_length=255,
+                        null=True,
+                        verbose_name="Product ID",
+                    ),
+                ),
+                (
+                    "duration",
+                    models.DurationField(
+                        blank=True,
+                        help_text="How long this entitlement will last?",
+                        null=True,
+                        verbose_name="Entitlement Duration",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Entitlement Target',
-                'verbose_name_plural': 'Entitlement Targets',
-                'ordering': ('id',),
+                "verbose_name": "Entitlement Target",
+                "verbose_name_plural": "Entitlement Targets",
+                "ordering": ("id",),
             },
         ),
         migrations.RemoveField(
-            model_name='serialkey',
-            name='targets',
+            model_name="serialkey",
+            name="targets",
         ),
         migrations.AddField(
-            model_name='serialkey',
-            name='targets',
-            field=models.ManyToManyField(related_name='entitlement_target', to='Plasma.entitlementtarget'),
+            model_name="serialkey",
+            name="targets",
+            field=models.ManyToManyField(
+                related_name="entitlement_target", to="Plasma.entitlementtarget"
+            ),
         ),
         migrations.RunPython(create_default_entitlement_targets),
     ]

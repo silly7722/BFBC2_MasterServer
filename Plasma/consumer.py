@@ -116,7 +116,7 @@ class PlasmaConsumer(BFBC2Consumer):
         )
 
         if self.clientVersion == version.parse(
-                "1.0"
+            "1.0"
         ) or self.clientVersion == version.parse("2.0"):
             # 1.0 - client, 2.0 - server
             pass
@@ -224,10 +224,12 @@ class PlasmaConsumer(BFBC2Consumer):
 
         if game:
             await self.transactor.start(
-                TransactionService.PlayNowService, PlayNowTXN.Status, {
+                TransactionService.PlayNowService,
+                PlayNowTXN.Status,
+                {
                     "gid": game.id,
                     "lid": game.lobby_id,
-                }
+                },
             )
         else:
             await self.transactor.start(

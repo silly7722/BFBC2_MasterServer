@@ -192,8 +192,9 @@ class GameManager(models.Manager):
         for gamemode in gamemodes:
             q = q | Q(gameMode=gamemode)
 
-        filtered_games = self.filter(q, serverHasPassword=False
-                                     ).order_by("-serverEA", "-activePlayers")
+        filtered_games = self.filter(q, serverHasPassword=False).order_by(
+            "-serverEA", "-activePlayers"
+        )
 
         if level:
             filtered_games_level = filtered_games.filter(gameLevel=level)

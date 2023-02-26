@@ -58,9 +58,13 @@ class Transactor:
     tid = 0  # Transaction ID
     transactions = {}
 
-    allowed_remote_transactions = [Transaction.EnterGameHostRequest, Transaction.QueueEnter,
-                                   Transaction.QueueInfoNotice, Transaction.EnterGameRequest,
-                                   Transaction.EnterGameNotice]
+    allowed_remote_transactions = [
+        Transaction.EnterGameHostRequest,
+        Transaction.QueueEnter,
+        Transaction.QueueInfoNotice,
+        Transaction.EnterGameRequest,
+        Transaction.EnterGameNotice,
+    ]
 
     def __init__(self, connection):
         self.connection = connection
@@ -143,8 +147,8 @@ class Transactor:
 
         if tid != self.tid:
             if (
-                    self.connection.currentlyUpdating
-                    and transaction == Transaction.UpdateBracket
+                self.connection.currentlyUpdating
+                and transaction == Transaction.UpdateBracket
             ):
                 self.tid += 1
             elif transaction == Transaction.Ping:

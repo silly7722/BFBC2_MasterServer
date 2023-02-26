@@ -6,46 +6,115 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('Plasma', '0005_assocation_associationmember_assocation_members_and_more'),
+        ("Plasma", "0005_assocation_associationmember_assocation_members_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Message',
+            name="Message",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('delivery_type', models.CharField(help_text='Type of delivery for this message.', max_length=255,
-                                                   verbose_name='Delivery Type')),
-                ('message_type',
-                 models.CharField(help_text='Type of the message.', max_length=255, verbose_name='Message Type')),
-                ('purge_strategy', models.CharField(help_text='Purge strategy of the message.', max_length=255,
-                                                    verbose_name='Purge Strategy')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('expires_at', models.DateTimeField(blank=True, null=True)),
-                ('receivers', models.ManyToManyField(related_name='receivers', to='Plasma.persona')),
-                ('sender', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sender',
-                                             to='Plasma.persona')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "delivery_type",
+                    models.CharField(
+                        help_text="Type of delivery for this message.",
+                        max_length=255,
+                        verbose_name="Delivery Type",
+                    ),
+                ),
+                (
+                    "message_type",
+                    models.CharField(
+                        help_text="Type of the message.",
+                        max_length=255,
+                        verbose_name="Message Type",
+                    ),
+                ),
+                (
+                    "purge_strategy",
+                    models.CharField(
+                        help_text="Purge strategy of the message.",
+                        max_length=255,
+                        verbose_name="Purge Strategy",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("expires_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "receivers",
+                    models.ManyToManyField(
+                        related_name="receivers", to="Plasma.persona"
+                    ),
+                ),
+                (
+                    "sender",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="sender",
+                        to="Plasma.persona",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Message',
-                'verbose_name_plural': 'Messages',
-                'ordering': ('id',),
+                "verbose_name": "Message",
+                "verbose_name_plural": "Messages",
+                "ordering": ("id",),
             },
         ),
         migrations.CreateModel(
-            name='Attachment',
+            name="Attachment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('key', models.CharField(help_text='Key of the attachment.', max_length=255, verbose_name='Key')),
-                ('type', models.CharField(help_text='Type of the attachment.', max_length=255, verbose_name='Type')),
-                ('data', models.TextField(help_text='Data of the attachment.', verbose_name='Data')),
-                ('message', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='Plasma.message')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "key",
+                    models.CharField(
+                        help_text="Key of the attachment.",
+                        max_length=255,
+                        verbose_name="Key",
+                    ),
+                ),
+                (
+                    "type",
+                    models.CharField(
+                        help_text="Type of the attachment.",
+                        max_length=255,
+                        verbose_name="Type",
+                    ),
+                ),
+                (
+                    "data",
+                    models.TextField(
+                        help_text="Data of the attachment.", verbose_name="Data"
+                    ),
+                ),
+                (
+                    "message",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="Plasma.message"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Message Attachment',
-                'verbose_name_plural': 'Message Attachments',
-                'ordering': ('id',),
+                "verbose_name": "Message Attachment",
+                "verbose_name_plural": "Message Attachments",
+                "ordering": ("id",),
             },
         ),
     ]

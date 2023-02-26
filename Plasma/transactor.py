@@ -88,8 +88,8 @@ class Transactor:
             # User is not logged in, check if the transaction is allowed without auth
 
             if (
-                    service == TransactionService.ConnectService
-                    or message.Get("TXN") in self.allowed_transactions_without_auth
+                service == TransactionService.ConnectService
+                or message.Get("TXN") in self.allowed_transactions_without_auth
             ):
                 # Transaction is allowed without auth
                 transaction_response = await self.services[service].handle(message)
@@ -109,7 +109,7 @@ class Transactor:
         return transaction_response
 
     async def start(
-            self, service: TransactionService | str, txn: Enum | str, data: dict
+        self, service: TransactionService | str, txn: Enum | str, data: dict
     ):
         """Start a unscheduled transaction"""
 
@@ -172,8 +172,8 @@ class Transactor:
         message_tid = message.kind & 0x00FFFFFF
 
         if (
-                not self.connection.initialized
-                and service == TransactionService.ConnectService
+            not self.connection.initialized
+            and service == TransactionService.ConnectService
         ):
             # This is the first transaction from the client
             self.tid = message_tid  # Set the initial transaction id
@@ -212,17 +212,17 @@ class Transactor:
         else:
             # Handle the transaction
             if (
-                    not self.connection.initialized
-                    and transaction_kind != TransactionKind.Simple
-                    or not self.connection.initialized
-                    and service != TransactionService.ConnectService
+                not self.connection.initialized
+                and transaction_kind != TransactionKind.Simple
+                or not self.connection.initialized
+                and service != TransactionService.ConnectService
             ):
                 transaction_response = TransactionError(
                     TransactionError.Code.NOT_INITIALIZED
                 )
             elif (
-                    transaction_kind == TransactionKind.Simple
-                    or transaction_kind == TransactionKind.SimpleResponse
+                transaction_kind == TransactionKind.Simple
+                or transaction_kind == TransactionKind.SimpleResponse
             ):
                 transaction_response = await self.get_response(service, message)
             elif transaction_kind == TransactionKind.Chunked:
@@ -287,8 +287,8 @@ class Transactor:
             message_bytes = transaction_response.compile()
 
             if (
-                    len(message_bytes) > self.connection.fragmentSize
-                    and self.connection.fragmentSize != -1
+                len(message_bytes) > self.connection.fragmentSize
+                and self.connection.fragmentSize != -1
             ):
                 # Packet is too big, we need to base64 encode it and split it into fragments
                 message_bytes = message_bytes[HEADER_LENGTH:]  # Get rid of the header
@@ -298,7 +298,7 @@ class Transactor:
                 encoded_message_size = len(message_bytes)
 
                 fragments = [
-                    message_bytes[i: i + self.connection.fragmentSize]
+                    message_bytes[i : i + self.connection.fragmentSize]
                     for i in range(0, len(message_bytes), self.connection.fragmentSize)
                 ]
 

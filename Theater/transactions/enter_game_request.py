@@ -37,9 +37,11 @@ async def enter_game_request(connection, message):
         queue_list.append(str(pid))
         queue_str = ";".join(queue_list)
         cache.set(f"queue:{gid}", queue_str, timeout=None)
-        cache.set(f"playerData:{gid}:{pid}",
-                  f"{connection.persona.id};{message.Get('R-INT-IP')}:{message.Get('R-INT-PORT')};{connection.ip}:{message.Get('PORT')};{message.Get('PTYPE')}",
-                  timeout=None)
+        cache.set(
+            f"playerData:{gid}:{pid}",
+            f"{connection.persona.id};{message.Get('R-INT-IP')}:{message.Get('R-INT-PORT')};{connection.ip}:{message.Get('PORT')};{message.Get('PTYPE')}",
+            timeout=None,
+        )
 
         response.Set("QPOS", queue_list.index(str(pid)) - 1)
         response.Set("QLEN", len(queue_list) - 1)
@@ -67,7 +69,9 @@ async def enter_game_request(connection, message):
             "GID": gid,
         }
 
-        await connection.send_remote_message(gameSession, "EGRQ", enterGameHostRequestData)
+        await connection.send_remote_message(
+            gameSession, "EGRQ", enterGameHostRequestData
+        )
     else:
         queueEnter = {
             "R-INT-IP": message.Get("R-INT-IP"),

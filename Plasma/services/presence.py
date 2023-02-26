@@ -126,8 +126,8 @@ class PresenceService(Service):
         response.Set("owner", owner)
 
         if (
-                owner["id"] == self.connection.loggedPersona.id
-                or owner["id"] in self.connection.subscribedTo
+            owner["id"] == self.connection.loggedPersona.id
+            or owner["id"] in self.connection.subscribedTo
         ):
             status = data.get("status")
 

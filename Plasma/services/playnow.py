@@ -32,15 +32,20 @@ class PlayNowService(Service):
 
         response = Packet()
 
-        response.Set("id", {
-            "id": self.connection.matchmakingId,
-            "partition": "/eagames/BFBC2",
-        })
+        response.Set(
+            "id",
+            {
+                "id": self.connection.matchmakingId,
+                "partition": "/eagames/BFBC2",
+            },
+        )
 
         players = data.Get("players")
         matchmaking_settings = players[0]
 
-        asyncio.get_running_loop().create_task(self.connection.start_matchmaking(matchmaking_settings["props"]))
+        asyncio.get_running_loop().create_task(
+            self.connection.start_matchmaking(matchmaking_settings["props"])
+        )
         return response
 
     async def __create_status(self, data):
@@ -51,10 +56,13 @@ class PlayNowService(Service):
 
         response = Packet()
 
-        response.Set("id", {
-            "id": self.connection.matchmakingId,
-            "partition": "/eagames/BFBC2",
-        })
+        response.Set(
+            "id",
+            {
+                "id": self.connection.matchmakingId,
+                "partition": "/eagames/BFBC2",
+            },
+        )
 
         self.connection.matchmakingId = None
 
@@ -68,9 +76,12 @@ class PlayNowService(Service):
         if gid and lid:
             games.append({"fit": 1001, "gid": gid, "lid": lid})
 
-        response.Set("props", {
-            "{resultType}": "JOIN",
-            "{games}": games,
-        })
+        response.Set(
+            "props",
+            {
+                "{resultType}": "JOIN",
+                "{games}": games,
+            },
+        )
 
         return response
