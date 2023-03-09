@@ -13,10 +13,11 @@ Demo Server
 - Secure: `Yes`
 
 ### Serial Keys:
-- Activate game: 'ACTIVATE-GAME'
-- Activate vietnam: 'ACTIVATE-VIETNAM'
-- Add limited edition weapons: 'ACTIVATE-LIMITED-EDITION'
-- Add veteran rank: 'ADD-VETERAN-RANK'
+- Activate base game: 'ACTIVATE-GAME'
+- Activate Vietnam DLC: 'ACTIVATE-VIETNAM'
+- Activate access to SPECACT kits: 'ACTIVATE-SPECACT'
+- Add Premium Edition (some game items are pre-unlocked): 'ACTIVATE-PREMIUM'
+- Activate veteran rank/weapons (M1 access): 'ACTIVATE-VETERAN'
 
 Table of Contents
 -----------------
