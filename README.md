@@ -16,7 +16,7 @@ Demo Server
 - Activate base game: `ACTIVATE-GAME`
 - Activate Vietnam DLC: `ACTIVATE-VIETNAM`
 - Activate access to SPECACT kits: `ACTIVATE-SPECACT`
-- Add Premium Edition (some game items are pre-unlocked): `ACTIVATE-PREMIUM`
+- Activate Premium Edition (some game items are pre-unlocked): `ACTIVATE-PREMIUM`
 - Activate veteran rank/weapons (M1 access): `ACTIVATE-VETERAN`
 
 Table of Contents
